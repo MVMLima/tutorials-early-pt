@@ -5,6 +5,11 @@ project:
   resources:
     - data
 
+lang: pt-BR
+
+language:
+  appendices: "Apêndices"
+
 book:
   title: "Análise de dados de surto com R"
   subtitle: "Ler, limpar, validar e visualizar dados de casos (linelist)"

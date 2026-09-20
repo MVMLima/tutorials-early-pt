@@ -25,7 +25,11 @@ jobs:
       # O perfil `ci` (_quarto-ci.yml) liga `freeze: true`, que reaproveita os resultados
       # já calculados mesmo quando um .qmd muda — sem ele, editar só o TEXTO de um episódio
       # faria o CI tentar executar o R e o runner não tem R instalado.
-      # Regra: mudou CÓDIGO R -> rode `quarto render` localmente e commite o _freeze/ junto.
+      # Efeito colateral que este passo barra: editar um .qmd e dar push SEM renderizar
+      # localmente deixaria o CI verde publicando a versão antiga.
+      - name: Conferir se algum .qmd mudou depois do último render local
+        run: python3 scripts/freshness.py --check
+
       - name: Renderizar o site
         run: quarto render --profile ci
 
