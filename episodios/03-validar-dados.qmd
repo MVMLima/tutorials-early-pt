@@ -428,3 +428,4 @@ O `{linelist}` é mais adequado para esse tipo de análise contínua ou de longa
 - Compreenda como `Warnings` vs. `Errors` afetam o fluxo de trabalho de processamento de dados.
 
 :::
+
