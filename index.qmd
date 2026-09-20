@@ -1,6 +1,6 @@
 ---
 title: "Análise de dados de surto com R"
-author: Marcos V M Lima
+author: "Marcos V M Lima"
 ---
 
 ## Sobre este material
