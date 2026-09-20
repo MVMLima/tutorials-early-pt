@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="pt-BR" xml:lang="pt-BR"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Limpar dados de casos – Análise de dados de surto com R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../episodios/03-validar-dados.html" rel="next">
+<link href="../episodios/01-ler-dados.html" rel="prev">
+<link href="../img/pkgs-hexlogos.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-4f8723c4e91b4923163491bd987d7814.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Nenhum resultado",
+    "search-matching-documents-text": "documentos correspondentes",
+    "search-copy-link-title": "Copiar link para a busca",
+    "search-hide-matches-text": "Esconder correspondências adicionais",
+    "search-more-match-text": "mais correspondência neste documento",
+    "search-more-matches-text": "mais correspondências neste documento",
+    "search-clear-button-title": "Limpar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Procurar"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../episodios/02-limpar-dados.html"><span class="chapter-title">Limpar dados de casos</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Procurar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Análise de dados de surto com R</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/MVMLima/tutorials-early-pt" title="Código fonte" class="quarto-navigation-tool px-1" aria-label="Código fonte"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Compartilhar" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Compartilhar"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Procurar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Análise de dados de surto com R</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../setup.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Configuração</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../episodios/01-ler-dados.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Ler dados de casos</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../episodios/02-limpar-dados.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Limpar dados de casos</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../episodios/03-validar-dados.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Validar dados de casos</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../episodios/04-agregar-visualizar.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Agregar e visualizar</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Apêndices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar seção">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../glossario.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Glossário de termos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../instrutor.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Notas para quem conduz a oficina</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../licenca.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Licença e créditos</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Nesta página</h2>
+   
+  <ul>
+  <li><a href="#introdução" id="toc-introdução" class="nav-link active" data-scroll-target="#introdução">Introdução</a>
+  <ul class="collapse">
+  <li><a href="#configuração" id="toc-configuração" class="nav-link" data-scroll-target="#configuração">Configuração</a></li>
+  <li><a href="#carregar-dados" id="toc-carregar-dados" class="nav-link" data-scroll-target="#carregar-dados">Carregar dados</a></li>
+  </ul></li>
+  <li><a href="#uma-inspeção-rápida" id="toc-uma-inspeção-rápida" class="nav-link" data-scroll-target="#uma-inspeção-rápida">Uma inspeção rápida</a></li>
+  <li><a href="#operações-comuns" id="toc-operações-comuns" class="nav-link" data-scroll-target="#operações-comuns">Operações comuns</a>
+  <ul class="collapse">
+  <li><a href="#padronizar-nomes-de-colunas" id="toc-padronizar-nomes-de-colunas" class="nav-link" data-scroll-target="#padronizar-nomes-de-colunas">Padronizar nomes de colunas</a></li>
+  <li><a href="#remover-irregularidades" id="toc-remover-irregularidades" class="nav-link" data-scroll-target="#remover-irregularidades">Remover irregularidades</a></li>
+  <li><a href="#substituir-valores-ausentes" id="toc-substituir-valores-ausentes" class="nav-link" data-scroll-target="#substituir-valores-ausentes">Substituir valores ausentes</a></li>
+  </ul></li>
+  <li><a href="#operações-específicas-de-epidemiologia" id="toc-operações-específicas-de-epidemiologia" class="nav-link" data-scroll-target="#operações-específicas-de-epidemiologia">Operações específicas de epidemiologia</a>
+  <ul class="collapse">
+  <li><a href="#padronizar-datas" id="toc-padronizar-datas" class="nav-link" data-scroll-target="#padronizar-datas">Padronizar datas</a></li>
+  <li><a href="#verificar-a-sequência-de-eventos-com-datas" id="toc-verificar-a-sequência-de-eventos-com-datas" class="nav-link" data-scroll-target="#verificar-a-sequência-de-eventos-com-datas">Verificar a sequência de eventos com datas</a></li>
+  <li><a href="#calcular-o-intervalo-de-tempo-entre-diferentes-eventos-com-datas" id="toc-calcular-o-intervalo-de-tempo-entre-diferentes-eventos-com-datas" class="nav-link" data-scroll-target="#calcular-o-intervalo-de-tempo-entre-diferentes-eventos-com-datas">Calcular o intervalo de tempo entre diferentes eventos com datas</a></li>
+  <li><a href="#substituição-baseada-em-dicionário" id="toc-substituição-baseada-em-dicionário" class="nav-link" data-scroll-target="#substituição-baseada-em-dicionário">Substituição baseada em dicionário</a></li>
+  <li><a href="#conversão-para-valores-numéricos" id="toc-conversão-para-valores-numéricos" class="nav-link" data-scroll-target="#conversão-para-valores-numéricos">Conversão para valores numéricos</a></li>
+  </ul></li>
+  <li><a href="#múltiplas-operações-de-uma-só-vez" id="toc-múltiplas-operações-de-uma-só-vez" class="nav-link" data-scroll-target="#múltiplas-operações-de-uma-só-vez">Múltiplas operações de uma só vez</a></li>
+  <li><a href="#relatório-de-limpeza" id="toc-relatório-de-limpeza" class="nav-link" data-scroll-target="#relatório-de-limpeza">Relatório de limpeza</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/MVMLima/tutorials-early-pt/edit/main/episodios/02-limpar-dados.qmd" class="toc-action"><i class="bi bi-github"></i>Editar essa página</a></li><li><a href="https://github.com/MVMLima/tutorials-early-pt/issues/new" class="toc-action"><i class="bi empty"></i>Criar uma issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Limpar dados de casos</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-note callout-titled" title="Perguntas">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Perguntas
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Como limpar e padronizar dados de casos?</li>
+</ul>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Objetivos">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Objetivos
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Explicar como limpar, curar e padronizar dados de casos usando o pacote <code>{cleanepi}</code>.</li>
+<li>Realizar operações essenciais de limpeza de dados em um conjunto de dados de casos real.</li>
+</ul>
+</div>
+</div>
+<div class="callout callout-style-default callout-important callout-titled" title="Pré-requisitos">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Importante</span>Pré-requisitos
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Neste episódio, usaremos um conjunto de dados simulado de Ebola. Para acessá-lo:</p>
+<ul>
+<li>Baixe o arquivo <a href="../data/simulated_ebola_2.csv"><code>simulated_ebola_2.csv</code></a></li>
+<li>Salve-o na pasta <code>data/</code>.</li>
+</ul>
+<p>Você também precisa de:</p>
+<p><strong>A versão mais recente do R:</strong> Siga as instruções em Configuração para <a href="../setup.html#setup-an-rstudio-project-and-folder">configurar um Projeto e pasta no Positron (ou RStudio, se preferir)</a></p>
+<p><strong>Pacotes do R instalados:</strong> <code>{cleanepi}</code>, <code>{rio}</code>, <code>{here}</code>, <code>{tidyverse}</code>.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Detalhes">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Detalhes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Instale estes pacotes se eles ainda não estiverem instalados (se necessário, você pode configurar o espelho brasileiro do CRAN com <code>options(repos = c(CRAN = "https://cran-r.c3sl.ufpr.br/"))</code>):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span>base<span class="sc">::</span><span class="fu">require</span>(<span class="st">"pak"</span>)) <span class="fu">install.packages</span>(<span class="st">"pak"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>pak<span class="sc">::</span><span class="fu">pak</span>(<span class="fu">c</span>(<span class="st">"cleanepi"</span>, <span class="st">"rio"</span>, <span class="st">"here"</span>, <span class="st">"tidyverse"</span>))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Se você encontrar alguma mensagem de erro, acesse a <a href="../setup.html#software-setup">página principal de configuração</a>.</p>
+</div>
+</div>
+</div>
+<section id="introdução" class="level2">
+<h2 class="anchored" data-anchor-id="introdução">Introdução</h2>
+<p>No processo de análise de dados de surtos, como em outras disciplinas da ciência de dados, é essencial garantir que o conjunto de dados esteja limpo, curado, padronizado e validado. Isso facilitará uma análise precisa (ou seja, você está analisando o que pensa que está analisando) e reproduzível (ou seja, se alguém quiser retornar e repetir as etapas da sua análise com o seu código, você terá a certeza de que obterá os mesmos resultados).</p>
+<p>Este episódio foca na limpeza de dados de epidemias e surtos usando o pacote <code>{cleanepi}</code>. Para fins de demonstração, trabalharemos com um conjunto de dados simulado de casos de Ebola.</p>
+<section id="configuração" class="level3">
+<h3 class="anchored" data-anchor-id="configuração">Configuração</h3>
+<p>Além do pacote <code>{cleanepi}</code>, usaremos os seguintes pacotes do R neste fluxo de trabalho de limpeza de dados:</p>
+<ul>
+<li><code>{here}</code> para referenciar arquivos facilmente,</li>
+<li><code>{rio}</code> para importar os dados no R,</li>
+<li><code>{dplyr}</code> para realizar algumas operações de processamento de dados,</li>
+<li><code>{magrittr}</code> para usar seu <strong>operador pipe (<code>%&gt;%</code>)</strong>.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Carregar pacotes</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cleanepi)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rio) <span class="co"># para importar dados</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here) <span class="co"># para referenciar arquivos facilmente</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) <span class="co"># para funções do {dplyr} e o pipe %&gt;%</span></span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Se não estiverem instalados, use as caixas de <code>Pré-requisitos</code> e <code>Detalhes</code> acima.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Checklist">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Checklist
+</div>
+</div>
+<section id="o-operador-de-dois-pontos-duplos" class="level3 callout-body-container callout-body">
+<h3 class="anchored" data-anchor-id="o-operador-de-dois-pontos-duplos">O operador de dois pontos duplos (<code>::</code>)</h3>
+<p>O <code>::</code> no R permite acessar funções ou objetos de um pacote específico sem anexar o pacote inteiro ao caminho de busca (<em>search path</em>). Ele oferece várias vantagens importantes, incluindo as seguintes:</p>
+<ul>
+<li>Informar explicitamente de qual pacote uma função provém, reduzindo a ambiguidade e potenciais conflitos quando vários pacotes têm funções com o mesmo nome.</li>
+<li>Permitir que você chame uma função de um pacote sem carregar o pacote inteiro com <code>library()</code>.</li>
+</ul>
+<p>Por exemplo, o comando <code>dplyr::filter(data, condition)</code> significa que estamos chamando a função <code>filter()</code> do pacote <code>{dplyr}</code>.</p>
+</section>
+</div>
+</section>
+<section id="carregar-dados" class="level3">
+<h3 class="anchored" data-anchor-id="carregar-dados">Carregar dados</h3>
+<p>O primeiro passo é importar o conjunto de dados para o ambiente de trabalho. Isso pode ser feito seguindo as orientações descritas no episódio <a href="../episodios/01-ler-dados.html">Ler dados de casos</a>. Isso envolve carregar o conjunto de dados no ambiente do <code>R</code> e visualizar sua estrutura e conteúdo.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ler dados</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># por exemplo, se o caminho para o arquivo for data/simulated_ebola_2.csv então:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>raw_ebola_data <span class="ot">&lt;-</span> rio<span class="sc">::</span><span class="fu">import</span>(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"simulated_ebola_2.csv"</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">as_tibble</span>() <span class="co"># para uma saída simples em data frame</span></span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Imprimir o data frame</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>raw_ebola_data</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 15,003 × 9
+      V1 `case id` age     gender status `date onset` `date sample` lab   region
+   &lt;int&gt;     &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;  &lt;chr&gt;        &lt;chr&gt;         &lt;lgl&gt; &lt;chr&gt; 
+ 1     1     14905 90      1      "conf… 03/15/2015   06/04/2015    NA    valdr…
+ 2     2     13043 twenty… 2      ""     Sep /11/13   03/01/2014    NA    valdr…
+ 3     3     14364 54      f       &lt;NA&gt;  09/02/2014   03/03/2015    NA    valdr…
+ 4     4     14675 ninety  &lt;NA&gt;   ""     10/19/2014   31/ 12 /14    NA    valdr…
+ 5     5     12648 74      F      ""     08/06/2014   10/10/2016    NA    valdr…
+ 6     5     12648 74      F      ""     08/06/2014   10/10/2016    NA    valdr…
+ 7     6     14274 sevent… female ""     Apr /05/15   01/23/2016    NA    valdr…
+ 8     7     14132 sixteen male   "conf… Dec /29/Y    05/10/2015    NA    valdr…
+ 9     8     14715 44      f      "conf… Apr /06/Y    04/24/2016    NA    valdr…
+10     9     13435 26      1      ""     09/07/2014   20/ 09 /14    NA    valdr…
+# ℹ 14,993 more rows</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Discussão">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Discussão
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Vamos primeiro <strong>diagnosticar</strong> problemas de formato no data frame. Liste todas as características no data frame acima que são problemáticas para a análise de dados.</p>
+<p>Alguma dessas características é familiar de análises de dados anteriores que você já realizou?</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-important callout-titled" title="Para o instrutor">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Importante</span>Para o instrutor
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Conduza uma breve discussão para relacionar as características diagnosticadas com as operações de limpeza necessárias.</p>
+<p>Você pode usar os seguintes termos para <strong>diagnosticar características</strong>:</p>
+<ul>
+<li><em>Codificação</em>, como a codificação de valores em colunas como <code>gender</code> e <code>age</code> usando números, letras e palavras. Também a presença de múltiplos formatos de data (“dd/mm/yyyy”, “yyyy/mm/dd”, etc.) na mesma coluna, como em <code>date_onset</code>. Menos visível, mas também os nomes das colunas.</li>
+<li><em>Valores ausentes</em>, como interpretar uma entrada como “” na coluna <code>status</code> ou “-99” em outras circunstâncias? Temos um dicionário de dados do processo de coleta de dados?</li>
+<li><em>Inconsistências</em>, como ter uma data de coleta da amostra anterior à data de início dos sintomas.</li>
+<li><em>Valores não plausíveis</em>, como observações em que alguns valores de datas estão fora do período esperado.</li>
+<li><em>Duplicatas</em>, todas as observações são únicas?</li>
+</ul>
+<p>Você pode usar estes termos para relacionar com as <strong>operações de limpeza</strong>:</p>
+<ul>
+<li>Padronizar nome da coluna</li>
+<li>Padronizar variáveis categóricas como ‘gender’</li>
+<li>Padronizar colunas de datas</li>
+<li>Converter valores de caracteres em numéricos</li>
+<li>Verificar a sequência de eventos com datas</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="uma-inspeção-rápida" class="level2">
+<h2 class="anchored" data-anchor-id="uma-inspeção-rápida">Uma inspeção rápida</h2>
+<p>A exploração e inspeção rápidas do conjunto de dados são cruciais para identificar possíveis problemas nos dados antes de iniciar qualquer tarefa de análise. O pacote <code>{cleanepi}</code> simplifica esse processo com a função <code>scan_data()</code>. Veja como você pode usá-la:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cleanepi<span class="sc">::</span><span class="fu">scan_data</span>(raw_ebola_data, <span class="at">format =</span> <span class="st">"percentage"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Field_names  missing  numeric     date character logical
+1         age  6.9047% 89.2475%       0%  10.7525%      0%
+2      gender 18.7416%  5.6035%       0%  94.3965%      0%
+3      status  5.6549%       0%       0%      100%      0%
+4  date onset  0.0067%       0% 91.5945%   8.4055%      0%
+5 date sample  0.0133%       0%     100%        0%      0%
+6      region       0%       0%       0%      100%      0%</code></pre>
+</div>
+</div>
+<p>Os resultados fornecem uma visão geral do conteúdo de todas as colunas de caracteres, incluindo os nomes das colunas e a porcentagem de alguns tipos de dados nelas contidos. Você pode ver que os nomes das colunas no conjunto de dados são descritivos, mas não têm consistência. Alguns são compostos por várias palavras separadas por espaços em branco. Além disso, algumas colunas, como <code>date_onset</code>, contêm mais de um tipo de dados, o que significa que não podem ser imediatamente reconhecidas e transformadas para <code>&lt;Date&gt;</code>. Há valores ausentes na forma de string vazia <code>""</code> em algumas e <code>NA</code> em outras.</p>
+</section>
+<section id="operações-comuns" class="level2">
+<h2 class="anchored" data-anchor-id="operações-comuns">Operações comuns</h2>
+<p>Esta seção demonstra como realizar algumas operações comuns de limpeza de dados usando o pacote <code>{cleanepi}</code>.</p>
+<section id="padronizar-nomes-de-colunas" class="level3">
+<h3 class="anchored" data-anchor-id="padronizar-nomes-de-colunas">Padronizar nomes de colunas</h3>
+<p>Para este conjunto de dados de exemplo, a padronização dos nomes das colunas envolve normalmente a remoção de espaços em branco e a ligação de diferentes palavras com “<code>_</code>”. Essa prática ajuda a manter a consistência e a legibilidade no conjunto de dados. No entanto, a função usada para padronizar nomes de colunas oferece mais opções. Digite <code>?cleanepi::standardize_column_names</code> no console para mais detalhes.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>sim_ebola_data <span class="ot">&lt;-</span> cleanepi<span class="sc">::</span><span class="fu">standardize_column_names</span>(raw_ebola_data)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(sim_ebola_data)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "v1"          "case_id"     "age"         "gender"      "status"     
+[6] "date_onset"  "date_sample" "lab"         "region"     </code></pre>
+</div>
+</div>
+<p>Se você quiser manter determinados nomes de colunas sem submetê-los ao processo de padronização, pode utilizar o argumento <code>keep</code> da função <code>cleanepi::standardize_column_names()</code>. Esse argumento aceita um vetor de nomes de colunas que devem ser mantidos inalterados.</p>
+<div class="desafio callout callout-style-default callout-tip callout-titled" title="Desafio">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Desafio
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><p>Quais diferenças você observa nos nomes das colunas?</p></li>
+<li><p>Padronize os nomes das colunas do conjunto de dados de entrada, mas mantenha o nome da primeira coluna como está</p></li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled" title="Dica">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Dica
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Você pode tentar:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>cleanepi<span class="sc">::</span><span class="fu">standardize_column_names</span>(<span class="at">data =</span> raw_ebola_data, <span class="at">keep =</span> <span class="st">"V1"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="remover-irregularidades" class="level3">
+<h3 class="anchored" data-anchor-id="remover-irregularidades">Remover irregularidades</h3>
+<p>Dados brutos podem conter campos que não acrescentam nenhuma variabilidade aos dados, como linhas e colunas <strong>vazias</strong>, ou colunas <strong>constantes</strong> (onde todas as entradas têm o mesmo valor). Eles também podem conter linhas <strong>duplicadas</strong>. Funções do <code>{cleanepi}</code> como <code>remove_duplicates()</code> e <code>remove_constants()</code> removem essas irregularidades, como demonstrado no bloco de código abaixo.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Remover constantes</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>sim_ebola_data <span class="ot">&lt;-</span> cleanepi<span class="sc">::</span><span class="fu">remove_constants</span>(sim_ebola_data)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Imprima a saída para identificar qual coluna constante você removeu antes de remover duplicatas.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Remover duplicatas</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>sim_ebola_data <span class="ot">&lt;-</span> cleanepi<span class="sc">::</span><span class="fu">remove_duplicates</span>(sim_ebola_data)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>! Found 5 duplicated rows in the dataset.
+ℹ Use `print_report(dat, "found_duplicates")` to access them, where "dat" is
+  the object used to store the output from this operation.</code></pre>
+</div>
+</div>
+<!-- Note que nosso Ebola simulado contém poucas duplicatas e poucas colunas constantes. -->
+<div class="callout callout-style-default callout-note callout-titled" title="Detalhes">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Detalhes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<section id="quantas-linhas-você-removeu-quais-linhas-foram-removidas" class="level4 callout-body-container callout-body">
+<h4 class="anchored" data-anchor-id="quantas-linhas-você-removeu-quais-linhas-foram-removidas">Quantas linhas você removeu? Quais linhas foram removidas?</h4>
+<p>Você pode obter o número e a localização das linhas duplicadas que foram encontradas. Execute <code>cleanepi::print_report()</code>, aguarde o relatório abrir no seu navegador e localize a aba “Duplicates”.</p>
+<p>Para usar essas informações no R, você pode imprimir data frames com seções específicas do relatório no console usando o argumento <code>what</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Imprimir um relatório das duplicatas encontradas</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>cleanepi<span class="sc">::</span><span class="fu">print_report</span>(<span class="at">data =</span> sim_ebola_data, <span class="at">what =</span> <span class="st">"found_duplicates"</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Imprimir um relatório das duplicatas removidas</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>cleanepi<span class="sc">::</span><span class="fu">print_report</span>(<span class="at">data =</span> sim_ebola_data, <span class="at">what =</span> <span class="st">"removed_duplicates"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Nota
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Aviso:</strong> Ter constantes (e potencialmente às vezes duplicatas) nem sempre é um problema nos dados. Verifique esses casos antes de aceitar as alterações.</p>
+</div>
+</div>
+<div class="desafio callout callout-style-default callout-tip callout-titled" title="Desafio">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Desafio
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>No seguinte data frame:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 5
+   col1  col2 col3  col4  col5  
+  &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt; &lt;date&gt;
+1     1     1 a     b     NA    
+2     2     3 a     b     NA    
+3    NA    NA a     &lt;NA&gt;  NA    
+4    NA    NA a     &lt;NA&gt;  NA    
+5    NA    NA a     &lt;NA&gt;  NA    
+6    NA    NA &lt;NA&gt;  &lt;NA&gt;  NA    </code></pre>
+</div>
+</div>
+<p>Quais colunas ou linhas são:</p>
+<ul>
+<li>Colunas constantes?</li>
+<li>Linhas duplicadas?</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled" title="Dica">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Dica
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Coluna constante: Uma coluna onde todos os valores são idênticos (ou todos ausentes). Elas não trazem nenhuma informação útil e geralmente podem ser removidas antes da análise.</p>
+<p>Linhas duplicadas: Linhas onde todos os valores coincidem exatamente com os de outra linha. Duplicatas podem distorcer contagens e estatísticas, e muitas vezes indicam um problema na forma como os dados foram unidos ou exportados.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Dica">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Dica
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-13" class="callout-13-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Qual saída esperamos após executar <code>cleanepi::remove_constants()</code>? Por quê?</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-important callout-titled" title="Para o instrutor">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-15-contents" aria-controls="callout-15" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Importante</span>Para o instrutor
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-15" class="callout-15-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Certifique-se de que comecem removendo as duplicatas antes de remover dados constantes.</p>
+<ul>
+<li>índices das linhas duplicadas: 3, 4, 5</li>
+<li>índices das linhas vazias: 4 (da primeira iteração); 3 (da segunda iteração)</li>
+<li>colunas vazias: “col5”</li>
+<li>colunas constantes: “col3” e “col4”</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>df <span class="sc">%&gt;%</span> cleanepi<span class="sc">::</span><span class="fu">remove_constants</span>()</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>! Constant data was removed after 2 iterations.
+ℹ Enter `print_report(dat, "constant_data")` for more information, where "dat"
+  represents the object used to store the output from `remove_constants()`.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 2
+   col1  col2
+  &lt;dbl&gt; &lt;dbl&gt;
+1     1     1
+2     2     3</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Detalhes">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-16-contents" aria-controls="callout-16" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Detalhes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-16" class="callout-16-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Também podemos avaliar a presença de duplicatas usando os IDs dos indivíduos. O pacote <code>{cleanepi}</code> oferece a função <code>check_subject_ids()</code>, projetada precisamente para essa tarefa, como mostrado no bloco de código abaixo. Essa função verifica se os IDs são únicos e atendem aos critérios exigidos especificados pelo usuário. Você pode consultar mais informações no manual de referência sobre <a href="https://epiverse-trace.github.io/cleanepi/reference/check_subject_ids.html">Verificar se os IDs dos indivíduos estão em conformidade com o formato esperado. Quando IDs incorretos são encontrados, a função emite um aviso e o usuário pode chamar a função <code>correct_subject_ids</code> para corrigi-los.</a></p>
+</div>
+</div>
+</div>
+</section>
+<section id="substituir-valores-ausentes" class="level3">
+<h3 class="anchored" data-anchor-id="substituir-valores-ausentes">Substituir valores ausentes</h3>
+<p>Além das irregularidades, os dados brutos podem conter valores ausentes, e estes podem estar codificados por diferentes strings (por exemplo, <code>"NA"</code>, <code>""</code>, <code>character(0)</code>). Para garantir uma análise robusta, é uma boa prática substituir todos os valores ausentes por <code>NA</code> em todo o conjunto de dados. Abaixo está um trecho de código demonstrando como você pode fazer isso no <code>{cleanepi}</code> para entradas ausentes representadas por uma string vazia <code>""</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>sim_ebola_data <span class="ot">&lt;-</span> cleanepi<span class="sc">::</span><span class="fu">replace_missing_values</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> sim_ebola_data,</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">na_strings =</span> <span class="st">""</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>sim_ebola_data</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 15,000 × 7
+      v1 case_id age         gender status    date_onset date_sample
+   &lt;int&gt;   &lt;int&gt; &lt;chr&gt;       &lt;chr&gt;  &lt;chr&gt;     &lt;chr&gt;      &lt;chr&gt;      
+ 1     1   14905 90          1      confirmed 03/15/2015 06/04/2015 
+ 2     2   13043 twenty-five 2      &lt;NA&gt;      sep /11/13 03/01/2014 
+ 3     3   14364 54          f      &lt;NA&gt;      09/02/2014 03/03/2015 
+ 4     4   14675 ninety      &lt;NA&gt;   &lt;NA&gt;      10/19/2014 31/ 12 /14 
+ 5     5   12648 74          F      &lt;NA&gt;      08/06/2014 10/10/2016 
+ 6     6   14274 seventy-six female &lt;NA&gt;      apr /05/15 01/23/2016 
+ 7     7   14132 sixteen     male   confirmed dec /29/y  05/10/2015 
+ 8     8   14715 44          f      confirmed apr /06/y  04/24/2016 
+ 9     9   13435 26          1      &lt;NA&gt;      09/07/2014 20/ 09 /14 
+10    10   14816 thirty      f      &lt;NA&gt;      06/29/2015 06/02/2015 
+# ℹ 14,990 more rows</code></pre>
+</div>
+</div>
+<p>Veja mais exemplos na caixa de detalhes abaixo:</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Detalhes">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-17-contents" aria-controls="callout-17" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Detalhes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-17" class="callout-17-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Por padrão, o <code>{cleanepi}</code> suporta uma ampla variedade de formatos de valores ausentes, conforme listado no bloco de código abaixo:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>cleanepi<span class="sc">::</span>common_na_strings</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "missing"       "NA"            "N A"           "N/A"          
+ [5] "#N/A"          "NA "           " NA"           "N /A"         
+ [9] "N / A"         " N / A"        "N / A "        "na"           
+[13] "n a"           "n/a"           "na "           " na"          
+[17] "n /a"          "n / a"         " a / a"        "n / a "       
+[21] "NULL"          "null"          ""              "\\?"          
+[25] "\\*"           "\\."           "not available" "Not Available"
+[29] "NOt available" "not avail"     "Not Avail"     "nan"          
+[33] "NAN"           "not a number"  "Not A Number" </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>missing_dat <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>case_id, <span class="sc">~</span>outcome, <span class="sc">~</span>gender, <span class="sc">~</span>hospital,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"d1fafd"</span>, <span class="st">"NA"</span>, <span class="st">"f"</span>, <span class="st">"Military Hospital"</span>,</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"53371b"</span>, <span class="st">"nan"</span>, <span class="st">"na"</span>, <span class="st">"Connaught Hospital"</span>,</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"missing"</span>, <span class="st">"Recover"</span>, <span class="st">"f"</span>, <span class="st">"other"</span>,</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"6c286a"</span>, <span class="st">"Death"</span>, <span class="st">"null"</span>, <span class="st">"na"</span>,</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"NAN"</span>, <span class="st">"Recover"</span>, <span class="st">"f"</span>, <span class="st">"N/A"</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="co"># imprimir</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>missing_dat</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 4
+  case_id outcome gender hospital          
+  &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;             
+1 d1fafd  NA      f      Military Hospital 
+2 53371b  nan     na     Connaught Hospital
+3 missing Recover f      other             
+4 6c286a  Death   null   na                
+5 NAN     Recover f      N/A               </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># limpar</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>missing_dat <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">replace_missing_values</span>()</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 4
+  case_id outcome gender hospital          
+  &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;             
+1 d1fafd  &lt;NA&gt;    f      military hospital 
+2 53371b  &lt;NA&gt;    &lt;NA&gt;   connaught hospital
+3 &lt;NA&gt;    recover f      other             
+4 6c286a  death   &lt;NA&gt;   &lt;NA&gt;              
+5 &lt;NA&gt;    recover f      &lt;NA&gt;              </code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Checagem">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Checagem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Neste ponto, removemos uma série de colunas e linhas. Compare as dimensões de <code>raw_ebola_data</code> e <code>sim_ebola_data</code>.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="operações-específicas-de-epidemiologia" class="level2">
+<h2 class="anchored" data-anchor-id="operações-específicas-de-epidemiologia">Operações específicas de epidemiologia</h2>
+<p>Além das tarefas comuns de limpeza de dados, como as discutidas na seção anterior, o pacote <code>{cleanepi}</code> oferece funcionalidades adicionais desenvolvidas especificamente para processar e analisar dados de surtos e epidemias. Esta seção aborda algumas dessas tarefas especializadas, focando principalmente em:</p>
+<ul>
+<li>colunas de datas (formato, sequência e intervalo de tempo entre duas ou mais),</li>
+<li>dicionários de dados para variáveis categóricas e</li>
+<li>conversão de números escritos em caracteres para valores numéricos.</li>
+</ul>
+<section id="padronizar-datas" class="level3">
+<h3 class="anchored" data-anchor-id="padronizar-datas">Padronizar datas</h3>
+<p>Um conjunto de dados de epidemia normalmente contém colunas do tipo <code>Date</code> para diferentes eventos, como data de infecção, data de início dos sintomas etc. Essas datas podem vir em diferentes formatos, e é uma boa prática padronizá-las para aproveitar as funcionalidades do R projetadas para lidar com valores de data nas análises seguintes. O pacote <code>{cleanepi}</code> fornece funcionalidade para converter colunas de datas de conjuntos de dados epidêmicos no formato ISO 8601, garantindo consistência entre as diferentes colunas de datas. Veja como você pode usá-la em nosso conjunto de dados simulado:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>sim_ebola_data <span class="ot">&lt;-</span> cleanepi<span class="sc">::</span><span class="fu">standardize_dates</span>(</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  sim_ebola_data,</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">target_columns =</span> <span class="fu">c</span>(<span class="st">"date_onset"</span>, <span class="st">"date_sample"</span>)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>! Detected 1142 values that comply with multiple formats and no values that are
+  outside of the specified time frame.
+ℹ Enter `print_report(data = dat, "date_standardization")` to access them,
+  where "dat" is the object used to store the output from this operation.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>sim_ebola_data</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 15,000 × 7
+      v1 case_id age         gender status    date_onset date_sample
+   &lt;int&gt;   &lt;int&gt; &lt;chr&gt;       &lt;chr&gt;  &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;     
+ 1     1   14905 90          1      confirmed 2015-03-15 2015-04-06 
+ 2     2   13043 twenty-five 2      &lt;NA&gt;      2013-09-11 2014-01-03 
+ 3     3   14364 54          f      &lt;NA&gt;      2014-02-09 2015-03-03 
+ 4     4   14675 ninety      &lt;NA&gt;   &lt;NA&gt;      2014-10-19 2014-12-31 
+ 5     5   12648 74          F      &lt;NA&gt;      2014-06-08 2016-10-10 
+ 6     6   14274 seventy-six female &lt;NA&gt;      2015-04-05 2016-01-23 
+ 7     7   14132 sixteen     male   confirmed NA         2015-10-05 
+ 8     8   14715 44          f      confirmed NA         2016-04-24 
+ 9     9   13435 26          1      &lt;NA&gt;      2014-07-09 2014-09-20 
+10    10   14816 thirty      f      &lt;NA&gt;      2015-06-29 2015-02-06 
+# ℹ 14,990 more rows</code></pre>
+</div>
+</div>
+<p>Esta função converte os valores nas colunas-alvo para o formato <strong>YYYY-mm-dd</strong>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Discussão">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Discussão
+</div>
+</div>
+<section id="como-isso-é-possível" class="level4 callout-body-container callout-body">
+<h4 class="anchored" data-anchor-id="como-isso-é-possível">Como isso é possível?</h4>
+<p>Convidamos você a descobrir o pacote-chave que torna essa padronização possível dentro do <code>{cleanepi}</code> lendo a seção “Details” do <a href="https://epiverse-trace.github.io/cleanepi/reference/standardize_dates.html#details">manual de referência de Standardize date variables</a>.</p>
+<p>Além disso, veja como usar o argumento <code>orders</code> se quiser trabalhar com strings no formato dos Estados Unidos (EUA). Participe da discussão sobre <a href="https://github.com/epiverse-trace/cleanepi/discussions/262">este exemplo reproduzível</a>.</p>
+</section>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="No Brasil: formato de data">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>No Brasil: formato de data
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A convenção de escrita de datas no Brasil é <strong>DD/MM/AAAA</strong>, então, ao padronizar datas vindas de sistemas de vigilância, o argumento <code>orders</code> costuma ser <code>c("dmy")</code>. Como este episódio mostra, o caminho seguro é declarar explicitamente a ordem esperada em vez de deixar o R adivinhar.</p>
+</div>
+</div>
+</section>
+<section id="verificar-a-sequência-de-eventos-com-datas" class="level3">
+<h3 class="anchored" data-anchor-id="verificar-a-sequência-de-eventos-com-datas">Verificar a sequência de eventos com datas</h3>
+<p>Garantir a ordem e a sequência corretas de eventos com datas é crucial na análise de dados epidemiológicos, especialmente na análise de doenças infecciosas em que o momento de eventos como início dos sintomas e coleta de amostras é essencial. O pacote <code>{cleanepi}</code> fornece uma função útil chamada <code>check_date_sequence()</code>, projetada para essa finalidade.</p>
+<p>Aqui está um exemplo de bloco de código demonstrando o uso da função <code>check_date_sequence()</code> nos primeiros 100 registros do nosso conjunto de dados simulado de Ebola.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># verificar as primeiras 100 linhas</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>sim_ebola_100 <span class="ot">&lt;-</span> sim_ebola_data <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">100</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co"># verificar a sequência de datas</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>cleanepi<span class="sc">::</span><span class="fu">check_date_sequence</span>(</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> sim_ebola_100,</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">target_columns =</span> <span class="fu">c</span>(<span class="st">"date_onset"</span>, <span class="st">"date_sample"</span>)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>ℹ Cannot check the sequence of date events across 37 rows due to missing data.</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>! Detected 24 incorrect date sequences at lines: "8, 15, 18, 20, 21, 23, 26,
+  28, 29, 32, 34, 35, 37, 38, 40, 43, 46, 49, 52, 54, 56, 58, 60, 63".
+ℹ Enter `print_report(data = dat, "incorrect_date_sequence")` to access them,
+  where "dat" is the object used to store the output from this operation.</code></pre>
+</div>
+</div>
+<p>Essa funcionalidade é crucial para garantir a integridade e a precisão dos dados em análises epidemiológicas, pois ajuda a identificar quaisquer inconsistências ou erros na ordem cronológica dos eventos, permitindo que você os trate de forma adequada.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Detalhes">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-21-contents" aria-controls="callout-21" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Detalhes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-21" class="callout-21-contents callout-collapse collapse">
+<section id="como-remover-observações-inconsistentes" class="level4 callout-body-container callout-body">
+<h4 class="anchored" data-anchor-id="como-remover-observações-inconsistentes">Como remover observações inconsistentes?</h4>
+<p>O pacote <code>{cleanepi}</code> não remove automaticamente observações inconsistentes; ele apenas as identifica e relata seus índices. Para removê-las, use o código abaixo:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Obter os índices das linhas incorretas a partir da saída do bloco de código acima</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>obs_incorrect <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="dv">8</span>, <span class="dv">15</span>, <span class="dv">18</span>, <span class="dv">20</span>, <span class="dv">21</span>, <span class="dv">23</span>, <span class="dv">26</span>, <span class="dv">28</span>, <span class="dv">29</span>, <span class="dv">32</span>, <span class="dv">34</span>, <span class="dv">35</span>,</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="dv">37</span>, <span class="dv">38</span>, <span class="dv">40</span>, <span class="dv">43</span>, <span class="dv">46</span>, <span class="dv">49</span>, <span class="dv">52</span>, <span class="dv">54</span>, <span class="dv">56</span>, <span class="dv">58</span>, <span class="dv">60</span>, <span class="dv">63</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Descartar observações com valores ausentes nas datas testadas</span></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>dat_without_missings_dates <span class="ot">&lt;-</span> sim_ebola_100 <span class="sc">%&gt;%</span></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span>(<span class="fu">is.na</span>(date_onset) <span class="sc">|</span> <span class="fu">is.na</span>(date_sample)))</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Descartar observações inconsistentes</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>dat_without_missings_dates <span class="sc">%&gt;%</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">slice</span>(<span class="sc">-</span>obs_incorrect)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 39 × 7
+      v1 case_id age         gender status    date_onset date_sample
+   &lt;int&gt;   &lt;int&gt; &lt;chr&gt;       &lt;chr&gt;  &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;     
+ 1     1   14905 90          1      confirmed 2015-03-15 2015-04-06 
+ 2     2   13043 twenty-five 2      &lt;NA&gt;      2013-09-11 2014-01-03 
+ 3     3   14364 54          f      &lt;NA&gt;      2014-02-09 2015-03-03 
+ 4     4   14675 ninety      &lt;NA&gt;   &lt;NA&gt;      2014-10-19 2014-12-31 
+ 5     5   12648 74          F      &lt;NA&gt;      2014-06-08 2016-10-10 
+ 6     6   14274 seventy-six female &lt;NA&gt;      2015-04-05 2016-01-23 
+ 7     9   13435 26          1      &lt;NA&gt;      2014-07-09 2014-09-20 
+ 8    11   13993 forty-nine  2      suspected 2015-01-21 2016-06-18 
+ 9    12   13698 four        2      suspected 2014-11-27 2015-05-28 
+10    13   13976 sixty-seven M      suspected 2014-10-20 2016-06-26 
+# ℹ 29 more rows</code></pre>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>Note que verificamos um subconjunto de 100 linhas. O data frame completo contém mais de 600 sequências de datas incorretas. Experimente você mesmo!</p>
+</blockquote>
+</section>
+</div>
+</div>
+</section>
+<section id="calcular-o-intervalo-de-tempo-entre-diferentes-eventos-com-datas" class="level3">
+<h3 class="anchored" data-anchor-id="calcular-o-intervalo-de-tempo-entre-diferentes-eventos-com-datas">Calcular o intervalo de tempo entre diferentes eventos com datas</h3>
+<p>Na análise de dados epidemiológicos, também é útil rastrear e analisar eventos dependentes do tempo a partir de uma linelist (lista de casos).</p>
+<ul>
+<li><p>Um exemplo é o <a href="../glossario.html#reportingdelay">atraso de notificação</a> (ou seja, o tempo decorrido da data de início dos sintomas do caso até a data de notificação do caso). No próximo conjunto de tutoriais, aprenderemos como levar isso em consideração na análise de surtos em tempo real.</p></li>
+<li><p>Outro exemplo é o atraso desde a data de coleta da amostra de um caso suspeito até a data em que a amostra foi testada (ou seja, com resultado conhecido), o que contribui para o atraso de notificação total (<a href="https://wwwnc.cdc.gov/eid/article/21/2/13-0504_article">Marinović et al., 2015</a>). Isso pode subsidiar a avaliação da capacidade de testagem laboratorial da região que está respondendo ao surto.</p></li>
+<li><p>O exemplo mais comum é calcular a idade de todos os indivíduos a partir de suas datas de nascimento (ou seja, a diferença de tempo entre hoje e a data de nascimento).</p></li>
+</ul>
+<p>O pacote <code>{cleanepi}</code> oferece uma função prática para calcular o tempo decorrido entre dois eventos com datas.</p>
+<p>Por exemplo, o trecho de código abaixo utiliza a função <code>cleanepi::timespan()</code> para calcular o <strong>atraso de notificação</strong> entre a data de início dos sintomas (<code>date_onset</code>) e a data de confirmação do caso (<code>date_sample</code>):</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>sim_ebola_data <span class="ot">&lt;-</span> cleanepi<span class="sc">::</span><span class="fu">timespan</span>(</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> sim_ebola_data,</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">target_column =</span> <span class="st">"date_onset"</span>,</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">end_date =</span> <span class="st">"date_sample"</span>,</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">span_unit =</span> <span class="st">"days"</span>,</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">span_column_name =</span> <span class="st">"reporting_delay"</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>sim_ebola_data <span class="sc">%&gt;%</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(case_id, date_sample, reporting_delay)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 15,000 × 3
+   case_id date_sample reporting_delay
+     &lt;int&gt; &lt;date&gt;                &lt;dbl&gt;
+ 1   14905 2015-04-06               22
+ 2   13043 2014-01-03              114
+ 3   14364 2015-03-03              387
+ 4   14675 2014-12-31               73
+ 5   12648 2016-10-10              855
+ 6   14274 2016-01-23              293
+ 7   14132 2015-10-05               NA
+ 8   14715 2016-04-24               NA
+ 9   13435 2014-09-20               73
+10   14816 2015-02-06             -143
+# ℹ 14,990 more rows</code></pre>
+</div>
+</div>
+<p>Após a execução da função <code>cleanepi::timespan()</code>, uma nova coluna chamada <code>reporting_delay</code> é adicionada ao conjunto de dados <strong><code>sim_ebola_data</code></strong>. Essa coluna representa o tempo decorrido calculado desde a data de início dos sintomas até a data de coleta da amostra, medido em dias.</p>
+<p>Podemos descrever esse atraso usando uma visualização:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># antes de gerar o gráfico:</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="co"># * manter IDs únicos,</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="co"># * manter um subconjunto plausível de observações consistentes (de 0 a 50 dias)</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>sim_ebola_delay <span class="ot">&lt;-</span> sim_ebola_data <span class="sc">%&gt;%</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">distinct</span>(case_id, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(reporting_delay <span class="sc">&gt;=</span> <span class="dv">0</span>, reporting_delay <span class="sc">&lt;</span> <span class="dv">50</span>)</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>sim_ebola_delay <span class="sc">%&gt;%</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> reporting_delay)) <span class="sc">+</span></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="02-limpar-dados_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Nota
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Também podemos usar <strong>estatísticas de resumo</strong> ou parâmetros de <strong>distribuições de probabilidade</strong> para descrever diferentes atrasos. Nós os usaremos nos próximos tutoriais. Para uma revisão, você pode consultar conceitos introdutórios em <a href="https://epiverse-trace.github.io/tutorials/">alguns episódios que introduzem atrasos para dados de surto</a>.</p>
+</div>
+</div>
+<div class="desafio callout callout-style-default callout-tip callout-titled" title="Desafio">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Desafio
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Leia o data frame <code>test_df.RDS</code> dentro do pacote <code>{cleanepi}</code> para:</p>
+<ul>
+<li>Limpar e padronizar os elementos necessários para concluir isso.</li>
+<li>Calcular o tempo decorrido desde a data do teste positivo até a data de internação.</li>
+<li>Gerar o gráfico do atraso calculado usando o <code>{ggplot2}</code>, mantendo os valores plausíveis.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">file =</span> <span class="fu">system.file</span>(<span class="st">"extdata"</span>, <span class="st">"test_df.RDS"</span>, <span class="at">package =</span> <span class="st">"cleanepi"</span>)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">as_tibble</span>()</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Dica">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-23-contents" aria-controls="callout-23" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Dica
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-23" class="callout-23-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Antes de calcular a idade, você pode precisar:</p>
+<ul>
+<li>padronizar os nomes das colunas</li>
+<li>padronizar as colunas de datas</li>
+</ul>
+<p>Você pode precisar descartar os tempos negativos para visualizar valores plausíveis.</p>
+</div>
+</div>
+</div>
+<div class="solucao callout callout-style-default callout-note callout-titled" title="Solução">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-24-contents" aria-controls="callout-24" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solução
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-24" class="callout-24-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>dat_clean <span class="ot">&lt;-</span> dat <span class="sc">%&gt;%</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># padronizar nomes de colunas e datas</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">standardize_column_names</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">standardize_dates</span>(</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">target_columns =</span> <span class="fu">c</span>(<span class="st">"date_first_pcr_positive_test"</span>, <span class="st">"date_of_admission"</span>)</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># calcular os atrasos em 'dias' do teste positivo até a internação</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">timespan</span>(</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">target_column =</span> <span class="st">"date_first_pcr_positive_test"</span>,</span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">end_date =</span> <span class="st">"date_of_admission"</span>,</span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">span_unit =</span> <span class="st">"days"</span>,</span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">span_column_name =</span> <span class="st">"days_to_admission"</span></span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>! Detected 4 values that comply with multiple formats and no values that are
+  outside of the specified time frame.
+ℹ Enter `print_report(data = dat, "date_standardization")` to access them,
+  where "dat" is the object used to store the output from this operation.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>dat_clean <span class="sc">%&gt;%</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    study_id,</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    date_first_pcr_positive_test,</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    date_of_admission,</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    days_to_admission</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 4
+   study_id  date_first_pcr_positive_test date_of_admission days_to_admission
+   &lt;chr&gt;     &lt;date&gt;                       &lt;date&gt;                        &lt;dbl&gt;
+ 1 PS001P2   2020-12-01                   2020-12-01                        0
+ 2 PS002P2   2021-01-01                   2021-01-28                       27
+ 3 PS004P2-1 2021-02-11                   2021-02-15                        4
+ 4 PS003P2   2021-02-01                   2021-02-11                       10
+ 5 P0005P2   2021-02-16                   2021-02-17                        1
+ 6 PS006P2   2021-05-02                   2021-02-17                      -74
+ 7 PB500P2   2021-02-19                   2021-02-28                        9
+ 8 PS008P2   2021-09-20                   2021-02-22                     -210
+ 9 PS010P2   2021-02-26                   2021-03-02                        4
+10 PS011P2   2021-03-03                   2021-03-05                        2</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>dat_clean <span class="sc">%&gt;%</span> </span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(days_to_admission <span class="sc">&gt;=</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> days_to_admission)) <span class="sc">+</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="02-limpar-dados_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>O que diferencia <code>cleanepi::timespan()</code> de <code>dplyr::mutate()</code> é a facilidade com que você pode calcular diferenças de tempo em diferentes unidades de tempo (usando o argumento <code>span_unit</code>) e como você pode obter o tempo restante em uma coluna diferente e em uma unidade de tempo diferente (usando <code>span_remainder_unit</code>). Veja a caixa de detalhes abaixo para um exemplo:</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Detalhes">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-26-contents" aria-controls="callout-26" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Detalhes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-26" class="callout-26-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Calcule a idade em anos de cada indivíduo até 3 de janeiro de 2025 (<code>"2025-01-03"</code>) a partir de sua data de nascimento, e o tempo restante em meses.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>dat_age <span class="ot">&lt;-</span> dat_clean <span class="sc">%&gt;%</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># padronizar nomes de colunas e datas</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">standardize_dates</span>(</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">target_columns =</span> <span class="fu">c</span>(<span class="st">"date_of_birth"</span>)</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># calcular a idade em 'anos' e retornar o restante em 'meses'</span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">timespan</span>(</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">target_column =</span> <span class="st">"date_of_birth"</span>,</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">end_date =</span> lubridate<span class="sc">::</span><span class="fu">ymd</span>(<span class="st">"2025-01-03"</span>),</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">span_unit =</span> <span class="st">"years"</span>,</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">span_column_name =</span> <span class="st">"age_in_years"</span>,</span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">span_remainder_unit =</span> <span class="st">"months"</span></span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>! Detected 4 values that comply with multiple formats and no values that are
+  outside of the specified time frame.
+ℹ Enter `print_report(data = dat, "date_standardization")` to access them,
+  where "dat" is the object used to store the output from this operation.
+! Found &lt;numeric&gt; values that could also be of type &lt;Date&gt; in column:
+  date_of_birth.
+ℹ It is possible to convert them into &lt;Date&gt; using: `lubridate::as_date(x,
+  origin = as.Date("1900-01-01"))`
+• where "x" represents here the vector of values from these columns
+  (`data$target_column`).</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>dat_age <span class="sc">%&gt;%</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    study_id,</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    date_of_birth,</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>    age_in_years,</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    remainder_months</span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 4
+   study_id  date_of_birth age_in_years remainder_months
+   &lt;chr&gt;     &lt;date&gt;               &lt;dbl&gt;            &lt;dbl&gt;
+ 1 PS001P2   1972-01-06              52               11
+ 2 PS002P2   1952-02-20              72               10
+ 3 PS004P2-1 1961-06-15              63                6
+ 4 PS003P2   1947-11-11              77                1
+ 5 P0005P2   2000-09-26              24                3
+ 6 PS006P2   NA                      NA               NA
+ 7 PB500P2   1989-03-11              35                9
+ 8 PS008P2   1976-05-10              48                7
+ 9 PS010P2   1991-09-23              33                3
+10 PS011P2   1991-08-02              33                5</code></pre>
+</div>
+</div>
+<p>As colunas <code>age_in_years</code> e <code>remainder_months</code> são adicionadas ao conjunto de dados <strong><code>dat_age</code></strong>, com o tempo restante medido em <code>months</code>.</p>
+<p>Para calcular a idade em anos <strong>até a data de hoje</strong>, você pode usar <code>Sys.Date()</code> como data final (<code>end_date</code>).</p>
+</div>
+</div>
+</div>
+</section>
+<section id="substituição-baseada-em-dicionário" class="level3">
+<h3 class="anchored" data-anchor-id="substituição-baseada-em-dicionário">Substituição baseada em dicionário</h3>
+<p>No pré-processamento de dados, é comum encontrar cenários em que determinadas colunas de um conjunto de dados, como a coluna “gender” no nosso conjunto de dados simulado de Ebola, devem ter valores ou fatores específicos. No entanto, também é comum que valores inesperados ou errôneos apareçam nessas colunas, os quais precisam ser substituídos pelos valores adequados. O pacote <code>{cleanepi}</code> oferece suporte para substituição baseada em dicionário, um método que permite substituir valores em colunas específicas com base em mapeamentos definidos em um dicionário de dados. Essa abordagem garante consistência e precisão na limpeza de dados.</p>
+<p>Além disso, o <code>{cleanepi}</code> fornece um dicionário integrado desenvolvido especificamente para dados epidemiológicos. O dicionário de exemplo abaixo inclui mapeamentos para a coluna “gender”.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>test_dict <span class="ot">&lt;-</span> base<span class="sc">::</span><span class="fu">readRDS</span>(</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">system.file</span>(<span class="st">"extdata"</span>, <span class="st">"test_dict.RDS"</span>, <span class="at">package =</span> <span class="st">"cleanepi"</span>)</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">as_tibble</span>()</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>test_dict</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 4
+  options values grp    orders
+  &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;   &lt;int&gt;
+1 1       male   gender      1
+2 2       female gender      2
+3 M       male   gender      3
+4 F       female gender      4
+5 m       male   gender      5
+6 f       female gender      6</code></pre>
+</div>
+</div>
+<p>Agora, podemos usar esse dicionário para padronizar os valores da coluna “gender” de acordo com categorias predefinidas. Abaixo está um exemplo de bloco de código demonstrando como realizar isso usando a função <code>clean_using_dictionary()</code> do pacote <code>{cleanepi}</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>sim_ebola_data <span class="ot">&lt;-</span> cleanepi<span class="sc">::</span><span class="fu">clean_using_dictionary</span>(</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> sim_ebola_data,</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">dictionary =</span> test_dict</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>sim_ebola_data</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 15,000 × 8
+      v1 case_id age        gender status date_onset date_sample reporting_delay
+   &lt;int&gt;   &lt;int&gt; &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;  &lt;date&gt;     &lt;date&gt;                &lt;dbl&gt;
+ 1     1   14905 90         male   confi… 2015-03-15 2015-04-06               22
+ 2     2   13043 twenty-fi… female &lt;NA&gt;   2013-09-11 2014-01-03              114
+ 3     3   14364 54         female &lt;NA&gt;   2014-02-09 2015-03-03              387
+ 4     4   14675 ninety     &lt;NA&gt;   &lt;NA&gt;   2014-10-19 2014-12-31               73
+ 5     5   12648 74         female &lt;NA&gt;   2014-06-08 2016-10-10              855
+ 6     6   14274 seventy-s… female &lt;NA&gt;   2015-04-05 2016-01-23              293
+ 7     7   14132 sixteen    male   confi… NA         2015-10-05               NA
+ 8     8   14715 44         female confi… NA         2016-04-24               NA
+ 9     9   13435 26         male   &lt;NA&gt;   2014-07-09 2014-09-20               73
+10    10   14816 thirty     female &lt;NA&gt;   2015-06-29 2015-02-06             -143
+# ℹ 14,990 more rows</code></pre>
+</div>
+</div>
+<p>Essa abordagem simplifica o processo de limpeza de dados, garantindo que variáveis categóricas em conjuntos de dados epidemiológicos sejam categorizadas com precisão e estejam prontas para análises posteriores.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Detalhes">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-27-contents" aria-controls="callout-27" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Detalhes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-27" class="callout-27-contents callout-collapse collapse">
+<section id="como-criar-seu-próprio-dicionário-de-dados" class="level4 callout-body-container callout-body">
+<h4 class="anchored" data-anchor-id="como-criar-seu-próprio-dicionário-de-dados">Como criar seu próprio dicionário de dados?</h4>
+<p>Observe que quando uma coluna no conjunto de dados contém valores que não estão no dicionário, a função <code>cleanepi::clean_using_dictionary()</code> gerará um erro. Você pode iniciar um dicionário personalizado com um data frame dentro ou fora do R e usar a função <code>cleanepi::add_to_dictionary()</code> para incluir novos elementos no dicionário. Por exemplo:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>new_dictionary <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">options =</span> <span class="st">"0"</span>,</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">values =</span> <span class="st">"female"</span>,</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">grp =</span> <span class="st">"sex"</span>,</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">orders =</span> <span class="dv">1</span>L</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">add_to_dictionary</span>(</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">option =</span> <span class="st">"1"</span>,</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">value =</span> <span class="st">"male"</span>,</span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">grp =</span> <span class="st">"sex"</span>,</span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">order =</span> <span class="cn">NULL</span></span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a>new_dictionary</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 4
+  options values grp   orders
+  &lt;chr&gt;   &lt;chr&gt;  &lt;chr&gt;  &lt;int&gt;
+1 0       female sex        1
+2 1       male   sex        2</code></pre>
+</div>
+</div>
+<p>Há mais detalhes na seção sobre “Dictionary-based data substituting” na <a href="https://epiverse-trace.github.io/cleanepi/articles/cleanepi.html#dictionary-based-data-substituting">vinheta</a> do pacote.</p>
+</section>
+</div>
+</div>
+</section>
+<section id="conversão-para-valores-numéricos" class="level3">
+<h3 class="anchored" data-anchor-id="conversão-para-valores-numéricos">Conversão para valores numéricos</h3>
+<p>No conjunto de dados brutos, algumas colunas podem vir com uma mistura de valores de caracteres e numéricos, e com frequência você desejará converter explicitamente valores de caracteres que representam números em valores numéricos (por exemplo, <code>"seven"</code> para <code>7</code>). Por exemplo, em nosso conjunto de dados simulado, algumas entradas na coluna de idade estão escritas por extenso. No <code>{cleanepi}</code>, a função <code>convert_to_numeric()</code> realiza essa conversão, como ilustrado no bloco de código abaixo.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>sim_ebola_data <span class="ot">&lt;-</span> cleanepi<span class="sc">::</span><span class="fu">convert_to_numeric</span>(</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> sim_ebola_data,</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">target_columns =</span> <span class="st">"age"</span></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>sim_ebola_data</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 15,000 × 8
+      v1 case_id   age gender status    date_onset date_sample reporting_delay
+   &lt;int&gt;   &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;                &lt;dbl&gt;
+ 1     1   14905    90 male   confirmed 2015-03-15 2015-04-06               22
+ 2     2   13043    25 female &lt;NA&gt;      2013-09-11 2014-01-03              114
+ 3     3   14364    54 female &lt;NA&gt;      2014-02-09 2015-03-03              387
+ 4     4   14675    90 &lt;NA&gt;   &lt;NA&gt;      2014-10-19 2014-12-31               73
+ 5     5   12648    74 female &lt;NA&gt;      2014-06-08 2016-10-10              855
+ 6     6   14274    76 female &lt;NA&gt;      2015-04-05 2016-01-23              293
+ 7     7   14132    16 male   confirmed NA         2015-10-05               NA
+ 8     8   14715    44 female confirmed NA         2016-04-24               NA
+ 9     9   13435    26 male   &lt;NA&gt;      2014-07-09 2014-09-20               73
+10    10   14816    30 female &lt;NA&gt;      2015-06-29 2015-02-06             -143
+# ℹ 14,990 more rows</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Suporte a múltiplos idiomas
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Graças ao pacote <code>{numberize}</code>, podemos converter números escritos em inglês, francês ou espanhol em valores inteiros positivos.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="múltiplas-operações-de-uma-só-vez" class="level2">
+<h2 class="anchored" data-anchor-id="múltiplas-operações-de-uma-só-vez">Múltiplas operações de uma só vez</h2>
+<p>Você pode combinar várias tarefas de limpeza de dados por meio do pipe do R base (<code>|&gt;</code>) ou do operador pipe do <code>{magrittr}</code> (<code>%&gt;%</code>), conforme mostrado no trecho de código abaixo.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Realizar as operações de limpeza usando o operador pipe (%&gt;%)</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>cleaned_data <span class="ot">&lt;-</span> raw_ebola_data <span class="sc">%&gt;%</span></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># operações comuns ---------------------------------------</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">standardize_column_names</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">remove_constants</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">remove_duplicates</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">replace_missing_values</span>(<span class="at">na_strings =</span> <span class="st">""</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">check_subject_ids</span>(</span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">target_columns =</span> <span class="st">"case_id"</span>,</span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">range =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">15000</span>)</span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># operações epidemiológicas ------------------------------</span></span>
+<span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">standardize_dates</span>(</span>
+<span id="cb57-14"><a href="#cb57-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">target_columns =</span> <span class="fu">c</span>(<span class="st">"date_onset"</span>, <span class="st">"date_sample"</span>)</span>
+<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb57-16"><a href="#cb57-16" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">check_date_sequence</span>(</span>
+<span id="cb57-17"><a href="#cb57-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">target_columns =</span> <span class="fu">c</span>(<span class="st">"date_onset"</span>, <span class="st">"date_sample"</span>)</span>
+<span id="cb57-18"><a href="#cb57-18" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb57-19"><a href="#cb57-19" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">timespan</span>(</span>
+<span id="cb57-20"><a href="#cb57-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">target_column =</span> <span class="st">"date_onset"</span>,</span>
+<span id="cb57-21"><a href="#cb57-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">end_date =</span> <span class="st">"date_sample"</span>,</span>
+<span id="cb57-22"><a href="#cb57-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">span_unit =</span> <span class="st">"days"</span>,</span>
+<span id="cb57-23"><a href="#cb57-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">span_column_name =</span> <span class="st">"reporting_delay"</span></span>
+<span id="cb57-24"><a href="#cb57-24" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb57-25"><a href="#cb57-25" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">clean_using_dictionary</span>(<span class="at">dictionary =</span> test_dict) <span class="sc">%&gt;%</span></span>
+<span id="cb57-26"><a href="#cb57-26" aria-hidden="true" tabindex="-1"></a>  cleanepi<span class="sc">::</span><span class="fu">convert_to_numeric</span>(<span class="at">target_columns =</span> <span class="st">"age"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Detalhes">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-29-contents" aria-controls="callout-29" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Detalhes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-29" class="callout-29-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Realizar operações de limpeza de dados individualmente pode ser demorado e sujeito a erros. O pacote <code>{cleanepi}</code> simplifica esse processo oferecendo uma função <em>wrapper</em> conveniente chamada <code>clean_data()</code>, que permite realizar múltiplas operações de uma só vez.</p>
+<p>Quando nenhuma operação de limpeza é especificada, a função <code>clean_data()</code> aplica automaticamente uma série de operações de limpeza de dados ao conjunto de dados de entrada. Aqui está um exemplo de bloco de código ilustrando como usar <code>clean_data()</code> em um conjunto de dados simulado bruto de Ebola:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>one_step_clean_data <span class="ot">&lt;-</span> cleanepi<span class="sc">::</span><span class="fu">clean_data</span>(raw_ebola_data)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>ℹ Cleaning column names</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>ℹ Removing constant columns and empty rows</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>ℹ Removing duplicated rows</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>! Found 5 duplicated rows in the dataset.
+ℹ Use `print_report(dat, "found_duplicates")` to access them, where "dat" is
+  the object used to store the output from this operation.</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="desafio callout callout-style-default callout-tip callout-titled" title="Desafio">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Desafio
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Você notou que o <code>{cleanepi}</code> contém um conjunto de funções para <strong>diagnosticar</strong> o status de limpeza do conjunto de dados e outro conjunto para <strong>executar</strong> ações de limpeza nele?</p>
+<p>Para identificar ambos os grupos:</p>
+<ul>
+<li>Em um pedaço de papel, escreva os nomes de cada função sob a coluna correspondente:</li>
+</ul>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th><strong>Diagnosticar</strong> status de limpeza</th>
+<th><strong>Executar</strong> ação de limpeza</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="callout callout-style-default callout-important callout-titled" title="Para o instrutor">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-31-contents" aria-controls="callout-31" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Importante</span>Para o instrutor
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-31" class="callout-31-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Observe que o <code>{cleanepi}</code> contém um conjunto de funções para <strong>diagnosticar</strong> o status de limpeza (por exemplo, <code>check_subject_ids()</code> e <code>check_date_sequence()</code> no bloco acima) e outro conjunto para <strong>executar</strong> uma ação de limpeza (as funções complementares do bloco acima).</p>
+</div>
+</div>
+</div>
+</section>
+<section id="relatório-de-limpeza" class="level2">
+<h2 class="anchored" data-anchor-id="relatório-de-limpeza">Relatório de limpeza</h2>
+<p>O pacote <code>{cleanepi}</code> gera um relatório abrangente detalhando os achados e as ações de todas as operações de limpeza de dados realizadas durante a análise.</p>
+<p>Este relatório é apresentado como um arquivo <code>HTML</code>. Se ele não abrir automaticamente, acesse a pasta temporária. Copie o caminho impresso no console do R, vá até o gerenciador de arquivos local, cole o caminho na barra de busca e você encontrará o arquivo <code>HTML</code>.</p>
+<p>Cada seção corresponde a uma operação específica de limpeza de dados, e clicar em cada seção permite acessar os resultados daquela operação em particular. Essa abordagem interativa permite que os usuários revisem e analisem com eficiência os efeitos de cada etapa individual de limpeza dentro do processo mais amplo de limpeza de dados.</p>
+<p>Você pode visualizar o relatório usando:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>cleanepi<span class="sc">::</span><span class="fu">print_report</span>(<span class="at">data =</span> cleaned_data)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<figure class="figure">
+<img src="../img/report_demo.png" alt="Relatório de limpeza de dados" width="600" class="figure-img">
+<figcaption>
+Exemplo de relatório de limpeza de dados gerado pelo <code>{cleanepi}</code>
+</figcaption>
+</figure>
+<div class="callout callout-style-default callout-note callout-titled" title="Pontos-chave">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Pontos-chave
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Use o pacote <code>{cleanepi}</code> para limpar e padronizar dados epidemiológicos</li>
+<li>Compreenda como usar o <code>{cleanepi}</code> para realizar tarefas comuns de limpeza de dados</li>
+<li>Visualize o relatório de limpeza de dados em um navegador, consulte-o e tome decisões.</li>
+</ul>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiada");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiada");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../episodios/01-ler-dados.html" class="pagination-link" aria-label="Ler dados de casos">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Ler dados de casos</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../episodios/03-validar-dados.html" class="pagination-link" aria-label="Validar dados de casos">
+        <span class="nav-page-text"><span class="chapter-title">Validar dados de casos</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Baseado em Epiverse-TRACE <em>Tutorials Early</em> (CC-BY 4.0)</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/MVMLima/tutorials-early-pt/edit/main/episodios/02-limpar-dados.qmd" class="toc-action"><i class="bi bi-github"></i>Editar essa página</a></li><li><a href="https://github.com/MVMLima/tutorials-early-pt/issues/new" class="toc-action"><i class="bi empty"></i>Criar uma issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Adaptação PT-BR: Marcos V. M. de Lima</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

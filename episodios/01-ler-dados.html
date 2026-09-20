@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="pt-BR" xml:lang="pt-BR"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Ler dados de casos – Análise de dados de surto com R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../episodios/02-limpar-dados.html" rel="next">
+<link href="../setup.html" rel="prev">
+<link href="../img/pkgs-hexlogos.png" rel="icon" type="image/png">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-4f8723c4e91b4923163491bd987d7814.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Nenhum resultado",
+    "search-matching-documents-text": "documentos correspondentes",
+    "search-copy-link-title": "Copiar link para a busca",
+    "search-hide-matches-text": "Esconder correspondências adicionais",
+    "search-more-match-text": "mais correspondência neste documento",
+    "search-more-matches-text": "mais correspondências neste documento",
+    "search-clear-button-title": "Limpar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Procurar"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../episodios/01-ler-dados.html"><span class="chapter-title">Ler dados de casos</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Procurar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Análise de dados de surto com R</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/MVMLima/tutorials-early-pt" title="Código fonte" class="quarto-navigation-tool px-1" aria-label="Código fonte"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Compartilhar" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Compartilhar"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Procurar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Análise de dados de surto com R</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../setup.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Configuração</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../episodios/01-ler-dados.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Ler dados de casos</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../episodios/02-limpar-dados.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Limpar dados de casos</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../episodios/03-validar-dados.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Validar dados de casos</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../episodios/04-agregar-visualizar.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Agregar e visualizar</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Apêndices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar seção">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../glossario.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Glossário de termos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../instrutor.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Notas para quem conduz a oficina</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../licenca.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Licença e créditos</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Nesta página</h2>
+   
+  <ul>
+  <li><a href="#introdução" id="toc-introdução" class="nav-link active" data-scroll-target="#introdução">Introdução</a></li>
+  <li><a href="#ler-dados-de-arquivos" id="toc-ler-dados-de-arquivos" class="nav-link" data-scroll-target="#ler-dados-de-arquivos">Ler dados de arquivos</a></li>
+  <li><a href="#ler-dados-de-bancos-de-dados" id="toc-ler-dados-de-bancos-de-dados" class="nav-link" data-scroll-target="#ler-dados-de-bancos-de-dados">Ler dados de bancos de dados</a>
+  <ul class="collapse">
+  <li><a href="#conectar-a-um-banco-de-dados" id="toc-conectar-a-um-banco-de-dados" class="nav-link" data-scroll-target="#conectar-a-um-banco-de-dados">1. Conectar a um banco de dados</a></li>
+  <li><a href="#acessar-a-lista-de-tabelas-do-banco-de-dados" id="toc-acessar-a-lista-de-tabelas-do-banco-de-dados" class="nav-link" data-scroll-target="#acessar-a-lista-de-tabelas-do-banco-de-dados">2. Acessar a lista de tabelas do banco de dados</a></li>
+  <li><a href="#ler-dados-de-uma-tabela-em-um-banco-de-dados" id="toc-ler-dados-de-uma-tabela-em-um-banco-de-dados" class="nav-link" data-scroll-target="#ler-dados-de-uma-tabela-em-um-banco-de-dados">3. Ler dados de uma tabela em um banco de dados</a></li>
+  <li><a href="#extrair-dados-do-banco-de-dados" id="toc-extrair-dados-do-banco-de-dados" class="nav-link" data-scroll-target="#extrair-dados-do-banco-de-dados">4. Extrair dados do banco de dados</a></li>
+  </ul></li>
+  <li><a href="#ler-dados-de-apis-de-sis" id="toc-ler-dados-de-apis-de-sis" class="nav-link" data-scroll-target="#ler-dados-de-apis-de-sis">Ler dados de APIs de SIS</a>
+  <ul class="collapse">
+  <li><a href="#importar-dados-do-dhis2" id="toc-importar-dados-do-dhis2" class="nav-link" data-scroll-target="#importar-dados-do-dhis2">Importar dados do DHIS2</a></li>
+  <li><a href="#importar-dados-do-sormas" id="toc-importar-dados-do-sormas" class="nav-link" data-scroll-target="#importar-dados-do-sormas">Importar dados do SORMAS</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/MVMLima/tutorials-early-pt/edit/main/episodios/01-ler-dados.qmd" class="toc-action"><i class="bi bi-github"></i>Editar essa página</a></li><li><a href="https://github.com/MVMLima/tutorials-early-pt/issues/new" class="toc-action"><i class="bi empty"></i>Criar uma issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">Ler dados de casos</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-default callout-note callout-titled" title="Perguntas">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Perguntas
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Onde você costuma armazenar dados de surto?</li>
+<li>Quais formatos de dados você costuma usar para análise?</li>
+<li>Você pode importar dados diretamente de servidores e sistemas de informação em saúde?</li>
+</ul>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="Objetivos">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Objetivos
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Identificar fontes comuns de dados de surto.</li>
+<li>Importar dados de surto de múltiplos formatos para o ambiente do <code>R</code>.</li>
+<li>Acessar e extrair dados de servidores remotos e sistemas de informação em saúde usando APIs.</li>
+</ul>
+</div>
+</div>
+<div class="callout callout-style-default callout-important callout-titled" title="Pré-requisitos">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Importante</span>Pré-requisitos
+</div>
+</div>
+<section id="pré-requisitos" class="level2 callout-body-container callout-body">
+<h2 class="anchored" data-anchor-id="pré-requisitos">Pré-requisitos</h2>
+<p>Este episódio requer que você esteja familiarizado com <strong>Ciência de dados</strong>: <a href="https://www.epirhandbook.com/en/new_pages/basics.html">Tarefas básicas com R</a>.</p>
+</section>
+</div>
+<section id="introdução" class="level2">
+<h2 class="anchored" data-anchor-id="introdução">Introdução</h2>
+<p>O primeiro passo na análise de surtos é importar seu conjunto de dados para o ambiente do <code>R</code>. Os dados podem vir de fontes locais, como arquivos no seu computador, ou de fontes externas, como bancos de dados e sistemas de informação em saúde (SIS/HIS).</p>
+<p>Os dados de surto assumem várias formas. Podem estar armazenados como arquivos simples (flat files) em vários formatos, abrigados em sistemas de gerenciamento de banco de dados relacional (RDBMS) ou gerenciados por SIS especializados, como o <a href="https://sormas.org/">SORMAS</a> e o <a href="https://dhis2.org/">DHIS2</a>. Esses SIS oferecem interfaces de programação de aplicações (APIs) que permitem a usuários autorizados modificar e extrair registros de dados com eficiência, tornando-os particularmente valiosos para a coleta e o armazenamento institucional de dados de saúde em larga escala.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="No Brasil: onde ficam os dados de casos">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>No Brasil: onde ficam os dados de casos
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>No Brasil, os dados de casos dos agravos de notificação compulsória são consolidados no <strong>SINAN</strong> e publicados de forma aberta e anonimizada pelo DATASUS, na plataforma de dados abertos e na área de <em>Transferência/Download de Arquivos</em>. Os arquivos são distribuídos por agravo, ano e unidade federativa, no formato <strong>DBC</strong> (DBF compactado).</p>
+<p>Para ler esses arquivos direto no R existe o pacote <a href="https://cran.r-project.org/package=microdatasus"><code>{microdatasus}</code></a>, que baixa, lê e pré-processa os microdados do DATASUS, com funções específicas para SINAN, SIM, SINASC, SIH, SIA e CNES. Fonte: <a href="https://www.gov.br/saude/pt-br/acesso-a-informacao/sic/dados-em-transparencia-ativa/svsa/agravos-de-notificacoes/agravos-de-notificacoes">Ministério da Saúde — dados sobre agravos de notificação</a>.</p>
+<p>Ao ler arquivos exportados de sistemas de vigilância, confira sempre o <strong>separador</strong> e a <strong>codificação</strong> antes de importar: eles variam entre sistemas e entre versões.</p>
+</div>
+</div>
+<p>Este episódio demonstra como ler dados de casos de cada uma dessas fontes. Vamos começar carregando os pacotes necessários. Usaremos o <code>{rio}</code> para ler dados armazenados em arquivos e o <code>{readepi}</code> para acessar dados de RDBMS e SIS. Também carregaremos o <code>{here}</code> para localizar caminhos de arquivos dentro do diretório do seu projeto e o <code>{tidyverse}</code>, que inclui o <code>{magrittr}</code> (que fornece o operador pipe <code>%&gt;%</code>) e o <code>{dplyr}</code> (para manipulação de dados). O operador pipe nos permite encadear funções de forma direta.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Carregar pacotes</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) <span class="co"># para funções do {dplyr} e o pipe %&gt;%</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rio) <span class="co"># para importar dados de arquivos</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here) <span class="co"># para referenciar arquivos com facilidade</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readepi) <span class="co"># para importar dados diretamente de RDBMS ou SIS</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dbplyr) <span class="co"># para backend de banco de dados para o {dplyr}</span></span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Checklist">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Checklist
+</div>
+</div>
+<section id="o-operador-dois-pontos-duplo" class="level3 callout-body-container callout-body">
+<h3 class="anchored" data-anchor-id="o-operador-dois-pontos-duplo">O operador dois-pontos duplo (<code>::</code>)</h3>
+<p>Os dois-pontos duplos <code>::</code> no <code>R</code> permitem chamar uma função específica de um pacote sem carregar o pacote inteiro. Por exemplo, <code>dplyr::filter(data, condition)</code> usa a função <code>filter()</code> do pacote <code>{dplyr}</code>, sem exigir <code>library(dplyr)</code>.</p>
+<p>Essa notação serve a dois propósitos: torna o código mais legível ao mostrar explicitamente de qual pacote cada função se origina e evita conflitos de espaço de nomes (namespace) que ocorrem quando múltiplos pacotes contêm funções com o mesmo nome.</p>
+</section>
+</div>
+<div class="callout callout-style-default callout-important callout-titled" title="Pré-requisitos">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Importante</span>Pré-requisitos
+</div>
+</div>
+<section id="configurar-um-projeto-e-uma-pasta" class="level3 callout-body-container callout-body">
+<h3 class="anchored" data-anchor-id="configurar-um-projeto-e-uma-pasta">Configurar um projeto e uma pasta</h3>
+<ul>
+<li>Crie um projeto do Positron (ou RStudio, se preferir). Se necessário, siga este <a href="https://docs.posit.co/ide/user/ide/get-started/#hello-rstudio-projects">guia sobre “Hello RStudio Projects”</a> para criar um.</li>
+<li>Dentro do projeto do Positron, crie uma pasta <code>data/</code>.</li>
+<li>Baixe os arquivos CSV <a href="../data/ebola_cases_2.csv">ebola_cases_2.csv</a> e <a href="../data/Marburg.zip">marburg.zip</a> e salve-os dentro da pasta <code>data/</code>.</li>
+</ul>
+</section>
+</div>
+</section>
+<section id="ler-dados-de-arquivos" class="level2">
+<h2 class="anchored" data-anchor-id="ler-dados-de-arquivos">Ler dados de arquivos</h2>
+<p>Diversos pacotes estão disponíveis para importar dados de surto armazenados em arquivos individuais para o <code>R</code>. Entre eles estão o <a href="https://gesistsa.github.io/rio/">{rio}</a>, o <a href="https://readr.tidyverse.org/">{readr}</a> do <code>{tidyverse}</code>, o <a href="https://bitbucket.org/djhshih/io/src/master/">{io}</a>, o <a href="https://cran.r-project.org/web/packages/ImportExport/index.html">{ImportExport}</a> e o <a href="https://rdatatable.gitlab.io/data.table/">{data.table}</a>. Juntos, esses pacotes oferecem métodos para ler um ou vários arquivos em uma ampla variedade de formatos.</p>
+<p>O exemplo abaixo mostra como importar um arquivo <code>csv</code> para o ambiente do <code>R</code> usando o pacote <code>{rio}</code>. Usamos o pacote <code>{here}</code> para instruir o R a procurar o arquivo na pasta <code>data/</code> do seu projeto, e <code>dplyr::as_tibble()</code> para converter em um formato tidy (organizado) para análises posteriores no R.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ler dados</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># por exemplo, se o caminho para o nosso arquivo for "data/raw-data/ebola_cases_2.csv", então:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>ebola_confirmed <span class="ot">&lt;-</span> rio<span class="sc">::</span><span class="fu">import</span>(</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"raw-data"</span>, <span class="st">"ebola_cases_2.csv"</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">as_tibble</span>() <span class="co"># para a saída como um data frame simples</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># pré-visualizar dados</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>ebola_confirmed</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 120 × 4
+    year month   day confirm
+   &lt;int&gt; &lt;int&gt; &lt;int&gt;   &lt;int&gt;
+ 1  2014     5    18       1
+ 2  2014     5    20       2
+ 3  2014     5    21       4
+ 4  2014     5    22       6
+ 5  2014     5    23       1
+ 6  2014     5    24       2
+ 7  2014     5    26      10
+ 8  2014     5    27       8
+ 9  2014     5    28       2
+10  2014     5    29      12
+# ℹ 110 more rows</code></pre>
+</div>
+</div>
+<p>Você pode usar a mesma abordagem para importar outros formatos de arquivo, como <code>tsv</code>, <code>xlsx</code> e outros.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Checklist">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Checklist
+</div>
+</div>
+<section id="por-que-devemos-usar-o-pacote-here" class="level3 callout-body-container callout-body">
+<h3 class="anchored" data-anchor-id="por-que-devemos-usar-o-pacote-here">Por que devemos usar o pacote {here}?</h3>
+<p>O pacote <code>{here}</code> foi projetado para simplificar a referência a arquivos em projetos do R, fornecendo uma maneira confiável de construir caminhos de arquivos relativos à raiz do projeto. A principal razão para usá-lo é a <strong>compatibilidade entre ambientes</strong>.</p>
+<p>Ele funciona em diferentes sistemas operacionais (Windows, Mac, Linux) sem a necessidade de ajustar os caminhos dos arquivos.</p>
+<ul>
+<li>No Windows, os caminhos são escritos usando barras invertidas ( <code>\</code> ) como separador entre os nomes das pastas: <code>"data\raw-data\file.csv"</code> .</li>
+<li>Em sistemas operacionais baseados em Unix, como macOS ou Linux, a barra inclinada ( <code>/</code> ) é usada como separador de caminho: <code>"data/raw-data/file.csv"</code>.</li>
+</ul>
+<p>O pacote <code>{here}</code> reforça a reprodutibilidade do seu trabalho em múltiplos sistemas operacionais. Se você tem interesse em reprodutibilidade, convidamos você a ler este tutorial para aumentar a <a href="https://epiverse-trace.github.io/research-compendium/">abertura, sustentabilidade e reprodutibilidade da sua análise de epidemias com o R</a></p>
+</section>
+</div>
+<div class="desafio callout callout-style-default callout-tip callout-titled" title="Desafio">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Desafio
+</div>
+</div>
+<section id="ler-dados-compactados" class="level3 callout-body-container callout-body">
+<h3 class="anchored" data-anchor-id="ler-dados-compactados">Ler dados compactados</h3>
+<p>Você consegue ler dados de um arquivo compactado no <code>R</code>?</p>
+<p>Baixe este <a href="../data/Marburg.zip">arquivo zip</a> contendo dados de surto de Marburg e, em seguida, importe-o para o seu ambiente do <code>R</code>.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Dica">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Dica
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Você pode consultar a <a href="https://gesistsa.github.io/rio/#supported-file-formats">lista completa de formatos de arquivo suportados</a> no pacote <code>{rio}</code> no site do pacote. Para ver a lista de formatos suportados no <code>{rio}</code>, execute:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>rio<span class="sc">::</span><span class="fu">install_formats</span>()</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</div>
+<div class="solucao callout callout-style-default callout-note callout-titled" title="Solução">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solução
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>rio<span class="sc">::</span><span class="fu">import</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"Marburg.zip"</span>))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</section>
+<section id="ler-dados-de-bancos-de-dados" class="level2">
+<h2 class="anchored" data-anchor-id="ler-dados-de-bancos-de-dados">Ler dados de bancos de dados</h2>
+<p>O pacote <code>{readepi}</code> contém funções que permitem importar dados diretamente de RDBMS. A função <code>readepi::read_rdbms()</code> suporta a importação de dados de servidores como Microsoft SQL, MySQL, PostgreSQL e SQLite. Ela é construída sobre o pacote <a href="https://dbi.r-dbi.org/">{DBI}</a>, que fornece uma interface geral para interagir com RDBMS.</p>
+<div class="callout callout-style-default callout-note callout-titled" title="Discussão">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Discussão
+</div>
+</div>
+<section id="vantagens-de-ler-dados-diretamente-de-um-banco-de-dados" class="level3 callout-body-container callout-body">
+<h3 class="anchored" data-anchor-id="vantagens-de-ler-dados-diretamente-de-um-banco-de-dados">Vantagens de ler dados diretamente de um banco de dados?</h3>
+<p>Importar dados diretamente de um banco de dados otimiza o uso da memória na sessão do R. Ao processar o banco de dados com “consultas” (por exemplo, SELECT, FILTER, GROUP BY) antes da extração, você reduz a carga de memória na sua sessão do Positron. Em contrapartida, carregar um conjunto de dados inteiro no R para manipulação pode consumir mais RAM do que sua máquina local consegue suportar, podendo fazer com que o Positron fique lento ou trave.</p>
+<p>Os RDBMS também permitem que múltiplos usuários acessem, armazenem e analisem partes do conjunto de dados simultaneamente, sem a necessidade de transferir arquivos individuais. Isso elimina os problemas de controle de versão que surgem quando várias cópias de arquivos circulam entre os usuários.</p>
+</section>
+</div>
+<section id="conectar-a-um-banco-de-dados" class="level3">
+<h3 class="anchored" data-anchor-id="conectar-a-um-banco-de-dados">1. Conectar a um banco de dados</h3>
+<p>Você pode usar a função <code>readepi::login()</code> para estabelecer uma conexão com o banco de dados, como mostrado abaixo:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># estabelecer a conexão com um banco de dados MySQL de teste</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>rdbms_login <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">login</span>(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">from =</span> <span class="st">"genome-mysql.soe.ucsc.edu"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"MySQL"</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">user_name =</span> <span class="st">"genome"</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">password =</span> <span class="st">""</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">driver_name =</span> <span class="st">""</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">db_name =</span> <span class="st">"hgFixed"</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">port =</span> <span class="dv">3306</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>✔ Logged in successfully!</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>rdbms_login</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;Pool&gt; of MySQLConnection objects
+  Objects checked out: 0
+  Available in pool: 1
+  Max size: Inf
+  Valid: TRUE</code></pre>
+</div>
+</div>
+<p>Os parâmetros da função são:</p>
+<ul>
+<li><code>from</code>: O endereço do servidor de banco de dados (<code>genome-mysql.soe.ucsc.edu</code>)</li>
+<li><code>type</code>: O tipo de sistema de banco de dados (“MySQL”)</li>
+<li><code>user_name</code>: O nome de usuário para autenticação (“genome”)</li>
+<li><code>password</code>: A senha (string vazia “” indica que nenhuma senha é exigida para este banco de dados de teste público)</li>
+<li><code>driver_name</code>: O driver do banco de dados (string vazia usa o driver padrão)</li>
+<li><code>db_name</code>: O banco de dados específico ao qual se conectar (“hgFixed”)</li>
+<li><code>port</code>: O número da porta para a conexão (3306)</li>
+</ul>
+<p>A função retorna um objeto de conexão armazenado na variável <code>rdbms_login</code>, que pode ser usado para consultar e extrair dados do banco de dados.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Nota
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Nota: Este exemplo usa um banco de dados público de teste do projeto UCSC Genome Browser (Universidade da Califórnia em Santa Cruz), razão pela qual nenhuma senha é necessária. Ele usa a porta padrão do MySQL (3306), portanto tem menor probabilidade de ser bloqueado do que servidores de teste em portas não padronizadas, mas o acesso ainda pode ser limitado por restrições rigorosas de redes corporativas ou institucionais.</p>
+</div>
+</div>
+</section>
+<section id="acessar-a-lista-de-tabelas-do-banco-de-dados" class="level3">
+<h3 class="anchored" data-anchor-id="acessar-a-lista-de-tabelas-do-banco-de-dados">2. Acessar a lista de tabelas do banco de dados</h3>
+<p>A função <code>readepi::show_tables()</code> recupera a lista completa dos nomes das tabelas de um banco de dados:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># obter os nomes das tabelas</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>tables <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">show_tables</span>(<span class="at">login =</span> rdbms_login)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>tables[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>]</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "affy10KDetails"  "affy120KDetails" "affyExps"        "affyGenoDetails"
+[5] "arbFlyLifeAll"  </code></pre>
+</div>
+</div>
+<p>Em um banco de dados relacional, você normalmente tem várias tabelas. Cada tabela representa uma entidade específica (por exemplo, pacientes, unidades de internação, tratamentos). As tabelas são vinculadas por meio de identificadores comuns chamados chaves primárias ou chaves estrangeiras.</p>
+</section>
+<section id="ler-dados-de-uma-tabela-em-um-banco-de-dados" class="level3">
+<h3 class="anchored" data-anchor-id="ler-dados-de-uma-tabela-em-um-banco-de-dados">3. Ler dados de uma tabela em um banco de dados</h3>
+<p>Você pode ler os dados da tabela <code>author</code> usando <code>dplyr::tbl()</code>. Esta tabela lista autores de submissões de sequências do GenBank, com cada <code>name</code> armazenado como <code>"LastName,F.I."</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># importar dados da tabela 'author' usando uma consulta SQL</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">&lt;-</span> rdbms_login <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">tbl</span>(<span class="at">from =</span> <span class="st">"author"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(stringr<span class="sc">::</span><span class="fu">str_sub</span>(<span class="at">string =</span> name, <span class="at">start =</span> <span class="dv">1</span>, <span class="at">end =</span> <span class="dv">1</span>) <span class="sc">==</span> <span class="st">"A"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">20</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">arrange</span>(<span class="fu">desc</span>(id))</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>dat</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A query:    ?? x 3
+# Database:   mysql 10.11.8-MariaDB [@genome-mysql.soe.ucsc.edu:/hgFixed]
+# Ordered by: desc(id)
+       id name                                                               crc
+    &lt;int&gt; &lt;chr&gt;                                                            &lt;dbl&gt;
+ 1 339199 Albert,R., Almasi,K., Kuenstler,A., Salamon,P. and Kiraly,L.   3.82 e9
+ 2 284697 Allen AL, McGeary JE and Hayes JE.                             3.55 e9
+ 3 255945 Ao,L., Zeng,X.C., Nie,Y., Mu,Y., Zhou,L. and Luo,X.            4.62 e8
+ 4 243691 Ablett,E., Seaton,G., Scott,K., Shelton,D., Graham,M.W., Bave… 2.83 e9
+ 5 224263 Abd El Halim,T. and Storey,K.B.                                1.000e9
+ 6 217461 Abdelkhalek,N.K., Komiya,A., Kato-Unoki,Y., Somamoto,T. and N… 9.55 e8
+ 7 216485 Abdalla,S.A., Horiuchi,H., Furusawa,S. and Matsuda,H.          2.39 e9
+ 8 207281 Anton,A., Marcos,M.A., Martinez,M.J., Tudo,G., Costa,J., Dimo… 9.96 e8
+ 9 197500 Ashizuka,Y., Kobayashi,T., Yoshitomi,H., Nakamura,A. and kaji… 1.02 e9
+10 186587 Aparicio,F., Myrta,A., Di Terlizzi,B. and Pallas,V.            1.67 e9
+11 179017 Alves,M.J., Fernandes,P.L., Amaro,F., Osorio,H., Luz,T., Parr… 3.82 e9
+12 158710 Agger,R. and Freimuth,P.                                       9.85 e8
+13 126265 Adachi,M., Sekiya,M., Isobe,M., Kumura,Y., Ogita,Z., Hinoda,Y… 2.83 e9
+14 117897 Asumalahti,K., Laitinen,T., Itkonen-Vatjus,R., Lokki,M.L., Su… 2.45 e9
+15 112843 Aoyama,M., Asai,K., Shishikura,T., Ohira,M., Inuzuka,H., Moro… 2.94 e9
+16 110990 Ali,B., Sohail,Y., Mumtaz,A.S. and Berndt,R.                   2.75 e9
+17 100178 Akhtar,M., Jaiswal,A., Limbu,N., Jaiswal,J.P., Qureshi,M.I. a… 2.40 e9
+18  95018 Azeez,A., Sane,A.P., Tripathi,S.K., Bhatnagar,D. and Nath,P.   2.39 e9
+19  70682 Adebesin,F., Widhalm,J.R., Lynch,J.H., McCoy,R. and Dudareva,… 9.83 e8
+20  13772 Anderson,S.L. and Smartt,C.T.                                  9.97 e8</code></pre>
+</div>
+</div>
+<p>Quando você aplica verbos do <code>{dplyr}</code> a essa tabela de banco de dados, eles são traduzidos automaticamente para consultas SQL:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># mostrar as consultas SQL traduzidas</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>dat <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">show_query</span>()</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;SQL&gt;
+SELECT `id`, `name`, `crc`
+FROM (
+  SELECT
+    *,
+    CASE
+WHEN (NOT(((RAND()) IS NULL))) THEN ROW_NUMBER() OVER (PARTITION BY (CASE WHEN (((RAND()) IS NULL)) THEN 1 ELSE 0 END) ORDER BY RAND())
+END AS `col01`
+  FROM `author`
+  WHERE (SUBSTR(`name`, 1, 1) = 'A')
+) AS `q01`
+WHERE (`col01` &lt;= 20)
+ORDER BY `id` DESC</code></pre>
+</div>
+</div>
+<p>Como alternativa, você pode usar a função <code>readepi::read_rdbms()</code> para importar dados de uma tabela de banco de dados. Ela aceita uma consulta SQL ou uma lista de parâmetros de consulta.</p>
+</section>
+<section id="extrair-dados-do-banco-de-dados" class="level3">
+<h3 class="anchored" data-anchor-id="extrair-dados-do-banco-de-dados">4. Extrair dados do banco de dados</h3>
+<p>Use <code>dplyr::collect()</code> para forçar a execução de uma consulta ao banco de dados e extrair o resultado para o seu computador local.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># puxar todos os dados para um tibble local</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>dat <span class="sc">%&gt;%</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">collect</span>()</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 20 × 3
+       id name                                                               crc
+    &lt;int&gt; &lt;chr&gt;                                                            &lt;dbl&gt;
+ 1 354373 An Y and Yang Q.                                                1.55e8
+ 2 326056 Ando H, Hirose M and Mikoshiba K.                               3.96e9
+ 3 315865 Anandham,R., Indira Gandhi,P., Kwon,S.W., Sa,T.M., Kim,Y.K. an… 6.86e8
+ 4 302754 Al-Hamilly NS, Radwan LR, Abdul-Rahman M, Mourad MI and Grawis… 9.86e8
+ 5 269933 Alvarenga,D.O., Rigonato,J., Branco,L.H., Melo,I.S. and Fiore,… 2.39e9
+ 6 263843 Angotzi,A.R., Stefansson,S.O., Nilsen,T.O., Rathore,R.M. and R… 3.99e9
+ 7 211150 Azevedo,R.S., Nunes,M.R., Chiang,J.O., Bensabath,G., Vasconcel… 3.82e9
+ 8 209646 Avellon,A., Rubio,G., Palacios,G., Casas,I., Rabella,N., Reina… 9.99e8
+ 9 199056 Al-Mahruqi,S., Al-Amri,A., Al-Busaidi,A., Al-Kindi,H. and Al-J… 2.69e9
+10 185853 Ajjikuttira,P.A., Loh,C.S., Ong,C.A. and Wong,S.M.              5.99e8
+11 184355 Angez,M., Shaukat,S., Zahra,R., Khurshid,A., Sharif,S., Alam,M… 2.40e9
+12 182187 Albayrak,H., Isidan,H. and Ozan,E.                              2.65e9
+13 175441 Ali,S., Zahid,S., Rasheed,F., Bibi,M., Tahir,S. and Qadri,I.    6.87e8
+14 149275 Aizawa,H., Zimmermann,N., Carrigan,P.E., Lee,J.J., Rothenberg,… 3.92e9
+15 134295 Ali,S.T., Duncan,A.M., Schappert,K., Heng,H.H., Tsui,L.C., Cho… 3.06e9
+16  50427 Adema,G.J. and Figdor,C.G.                                      9.82e8
+17  33020 Aly,M.Z.Y., Elgendy,A.M., Mohamed,I.I.I. and Sebak,S.I.         2.40e9
+18  31833 Ao,Y.                                                           2.52e4
+19   9206 Abdul-Hakeem,F., Vershon,A.K. and Nemeroff,M.E.                 2.96e9
+20   1212 Aoki,M., Ehara,M., Saito,Y., Yoshioka,H., Miyazaki,M., Saito,Y… 2.75e9</code></pre>
+</div>
+</div>
+<p>Idealmente, após especificar um conjunto de consultas, você pode reduzir o tamanho do conjunto de dados de entrada para uso no ambiente da sua sessão do R.</p>
+<div class="desafio callout callout-style-default callout-tip callout-titled" title="Desafio">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Desafio
+</div>
+</div>
+<section id="executar-consultas-sql-no-r-usando-o-dbplyr" class="level3 callout-body-container callout-body">
+<h3 class="anchored" data-anchor-id="executar-consultas-sql-no-r-usando-o-dbplyr">Executar consultas SQL no R usando o {dbplyr}</h3>
+<p>Crie uma tabela contendo:</p>
+<ul>
+<li>a coluna <code>name</code> da tabela <code>author</code>,</li>
+<li>a coluna <code>acc</code> da tabela <code>gbCdnaInfo</code>, e</li>
+<li>usando o <code>id</code> do autor como chave primária ou identificador comum.</li>
+</ul>
+<p>Seguindo estes passos:</p>
+<ul>
+<li>Use os verbos do <code>{dplyr}</code> para selecionar colunas e juntar tabelas,</li>
+<li>Imprima as consultas SQL do banco de dados relacional, e</li>
+<li>Puxe os dados para a sua sessão local.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled" title="Dica">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Dica
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-13" class="callout-13-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Juntar colunas de duas tabelas diferentes:</p>
+<ul>
+<li>Da tabela <code>author</code>, selecione <code>id</code> e <code>name</code>, mantendo apenas algumas linhas (por exemplo, autores cujo sobrenome começa com <code>"A"</code>) — <code>gbCdnaInfo</code> abrange todas as submissões já feitas ao GenBank, portanto filtrar <code>author</code> previamente mantém a junção rápida.</li>
+<li>Da tabela <code>gbCdnaInfo</code>, selecione <code>author</code> (a chave estrangeira para <code>author$id</code>) e <code>acc</code>.</li>
+<li>Junte a tabela <code>gbCdnaInfo</code> à tabela <code>author</code> usando <code>dplyr::left_join()</code>, correspondendo <code>author$id</code> a <code>gbCdnaInfo$author</code> — observe que as colunas de junção têm <strong>nomes diferentes</strong>, então você precisará de <code>by = c("id" = "author")</code> em vez de depender de um nome de coluna compartilhado.</li>
+<li>Imprima a consulta SQL usando <code>dplyr::show_query()</code></li>
+<li>Colete a saída da junção usando <code>dplyr::collect()</code></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="solucao callout callout-style-default callout-note callout-titled" title="Solução">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solução
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-14" class="callout-14-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># SELECIONAR ALGUMAS COLUNAS DE UMA TABELA E FAZER LEFT JOIN COM OUTRA TABELA</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>author <span class="ot">&lt;-</span> rdbms_login <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">tbl</span>(<span class="at">from =</span> <span class="st">"author"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(stringr<span class="sc">::</span><span class="fu">str_sub</span>(<span class="at">string =</span> name, <span class="at">start =</span> <span class="dv">1</span>, <span class="at">end =</span> <span class="dv">1</span>) <span class="sc">==</span> <span class="st">"A"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">5</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(id, name)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>gb_cdna_info <span class="ot">&lt;-</span> rdbms_login <span class="sc">%&gt;%</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">tbl</span>(<span class="at">from =</span> <span class="st">"gbCdnaInfo"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(author, acc)</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> author,</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> gb_cdna_info,</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"id"</span> <span class="ot">=</span> <span class="st">"author"</span>),</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">keep =</span> <span class="cn">TRUE</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">show_query</span>()</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;SQL&gt;
+SELECT `LHS`.*, `author`, `acc`
+FROM (
+  SELECT `id`, `name`
+  FROM (
+    SELECT
+      *,
+      CASE
+WHEN (NOT(((RAND()) IS NULL))) THEN ROW_NUMBER() OVER (PARTITION BY (CASE WHEN (((RAND()) IS NULL)) THEN 1 ELSE 0 END) ORDER BY RAND())
+END AS `col01`
+    FROM `author`
+    WHERE (SUBSTR(`name`, 1, 1) = 'A')
+  ) AS `q01`
+  WHERE (`col01` &lt;= 5)
+) AS `LHS`
+LEFT JOIN `gbCdnaInfo`
+  ON (`LHS`.`id` = `gbCdnaInfo`.`author`)</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> author,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">y =</span> gb_cdna_info,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"id"</span> <span class="ot">=</span> <span class="st">"author"</span>),</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">keep =</span> <span class="cn">TRUE</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">collect</span>()</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 96 × 4
+       id name                                                      author acc  
+    &lt;int&gt; &lt;chr&gt;                                                      &lt;dbl&gt; &lt;chr&gt;
+ 1 342783 Appourchaux R, Delpeuch M, Zhong L, Burlaud-Gaillard J, …     NA &lt;NA&gt; 
+ 2 346521 Avagliano Trezza R, Sonzogni M, Bossuyt SNV, Zampeta FI,…     NA &lt;NA&gt; 
+ 3  97850 An,H., Yu,Y. and Ming,L.                                   97850 GU55…
+ 4  97850 An,H., Yu,Y. and Ming,L.                                   97850 GU55…
+ 5  97850 An,H., Yu,Y. and Ming,L.                                   97850 GU55…
+ 6 218154 Aird,S.D., Aggarwal,S., Villar-Briones,A., Tin,M.M., Ter… 218154 AB98…
+ 7 218154 Aird,S.D., Aggarwal,S., Villar-Briones,A., Tin,M.M., Ter… 218154 AB98…
+ 8 218154 Aird,S.D., Aggarwal,S., Villar-Briones,A., Tin,M.M., Ter… 218154 AB98…
+ 9 218154 Aird,S.D., Aggarwal,S., Villar-Briones,A., Tin,M.M., Ter… 218154 AB98…
+10 218154 Aird,S.D., Aggarwal,S., Villar-Briones,A., Tin,M.M., Ter… 218154 AB98…
+# ℹ 86 more rows</code></pre>
+</div>
+</div>
+<p>Você também pode consultar o pacote do R <code>{dbplyr}</code>. Mas para um tutorial passo a passo sobre SQL, recomendamos este <a href="https://datacarpentry.org/sql-ecology-lesson/">tutorial sobre gerenciamento de dados com SQL para ecologistas</a>.</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+<p>Você pode fechar a conexão com o banco de dados com:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>pool<span class="sc">::</span><span class="fu">poolClose</span>(rdbms_login)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Detalhes">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-16-contents" aria-controls="callout-16" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Detalhes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-16" class="callout-16-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Você pode confirmar que a conexão foi fechada executando os objetos criados no console:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>rdbms_login</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;Pool&gt; of MySQLConnection objects
+  Objects checked out: 0
+  Available in pool: 0
+  Max size: Inf
+  Valid: FALSE</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>dat</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in `poolCheckout()`:
+! The pool has been closed.</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="ler-dados-de-apis-de-sis" class="level2">
+<h2 class="anchored" data-anchor-id="ler-dados-de-apis-de-sis">Ler dados de APIs de SIS</h2>
+<p>Os dados de saúde são cada vez mais armazenados em sistemas de informação em saúde (SIS/HIS) especializados, como <strong>Fingertips</strong>, <strong>GoData</strong>, <strong>REDCap</strong>, <strong>DHIS2</strong>, <strong>SORMAS</strong>, etc. A versão atual do pacote <code>{readepi}</code> permite importar dados do <strong>DHIS2</strong> e do <strong>SORMAS</strong>. As subseções abaixo demonstram como importar dados desses dois sistemas.</p>
+<section id="importar-dados-do-dhis2" class="level3">
+<h3 class="anchored" data-anchor-id="importar-dados-do-dhis2">Importar dados do DHIS2</h3>
+<p>O <a href="https://dhis2.org/about/">DHIS2</a> (District Health Information System 2) é um software de código aberto que revolucionou a gestão global de informações de saúde. A função <code>readepi::read_dhis2()</code> importa dados do sistema <a href="https://dhis2.org/tracker-in-action/">Tracker</a> do DHIS2 por meio de sua API.</p>
+<p>Para importar dados do DHIS2 com sucesso, você precisa:</p>
+<ol type="1">
+<li>Conectar-se ao sistema usando a função <code>readepi::login()</code></li>
+<li>Fornecer o nome ou ID do programa e da unidade organizacional de interesse</li>
+</ol>
+<p>Você pode recuperar os IDs e nomes dos programas e unidades organizacionais disponíveis usando as funções <code>get_programs()</code> e <code>get_organisation_units()</code>, respectivamente.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># estabelecer a conexão com o sistema</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>dhis2_login <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">login</span>(</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"dhis2"</span>,</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">from =</span> <span class="st">"https://play.im.dhis2.org/stable-2-42-5-1"</span>,</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">user_name =</span> <span class="st">"admin"</span>,</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">password =</span> <span class="st">"district"</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in `httr2::req_perform()`:
+! HTTP 404 Not Found.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>dhis2_login</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>function (base_url, user_name, password) 
+{
+    target_url &lt;- file.path(base_url, "api", "me")
+    resp &lt;- httr2::req_perform(httr2::req_auth_basic(httr2::request(target_url), 
+        user_name, password))
+    cli::cli_alert_success("Logged in successfully!")
+    return(invisible(resp))
+}
+&lt;bytecode: 0x60ac6c9924e0&gt;
+&lt;environment: namespace:readepi&gt;</code></pre>
+</div>
+</div>
+<p>Se o passo acima falhar, verifique outras opções disponíveis na lista de <a href="https://im.dhis2.org/public/instances">Instâncias de Demonstração do DHIS2</a>, todas acessíveis com o nome de usuário <code>"admin"</code> e senha <code>"district"</code>. Basta substituir <code>stable-2-42-5-1</code> na URL. A única condição é que ela deve ser de versão igual ou inferior a <code>2.42</code>.</p>
+<div class="callout callout-style-default callout-warning callout-titled" title="Atenção">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Aviso</span>Atenção
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Evite publicar seu NOME DE USUÁRIO e SENHA. Você pode usar o <code>{rstudioapi}</code>:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>dhis2_login <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">login</span>(</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"dhis2"</span>,</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">from =</span> <span class="st">"https://play.im.dhis2.org/stable-2-42-5-1"</span>,</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">user_name =</span> rstudioapi<span class="sc">::</span><span class="fu">askForPassword</span>(<span class="st">"Database username"</span>),</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">password =</span> rstudioapi<span class="sc">::</span><span class="fu">askForPassword</span>(<span class="st">"Database password"</span>)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Você pode ler mais nesta postagem de blog sobre <a href="https://rviews.rstudio.com/2019/03/21/how-to-avoid-publishing-credentials-in-your-code/">Como evitar a publicação de credenciais no seu código</a></p>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># obter os nomes e IDs dos programas</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>programs <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">get_programs</span>(<span class="at">login =</span> dhis2_login)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in `login[["url"]]`:
+! objeto de tipo 'closure' não possível dividir em subconjuntos</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># imprimir tabelas</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>tibble<span class="sc">::</span><span class="fu">as_tibble</span>(programs)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! objeto 'programs' não encontrado</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># obter os nomes e IDs das unidades organizacionais</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>org_units <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">get_organisation_units</span>(<span class="at">login =</span> dhis2_login)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in `login[["url"]]`:
+! objeto de tipo 'closure' não possível dividir em subconjuntos</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># imprimir tabelas</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>tibble<span class="sc">::</span><span class="fu">as_tibble</span>(org_units)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! objeto 'org_units' não encontrado</code></pre>
+</div>
+</div>
+<p>Após recuperar as unidades organizacionais e os nomes dos programas do banco de dados do DHIS2, você pode importar dados usando os nomes ou os IDs codificados, como demonstrado nos blocos de código abaixo:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># importar dados do DHIS2 usando nomes</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>data_name <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">read_dhis2</span>(</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">login =</span> dhis2_login,</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">org_unit =</span> <span class="st">"Bucksal Clinic"</span>,</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">program =</span> <span class="st">"Child Programme"</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in `readepi::read_dhis2()`:
+! Assertion on 'login' failed: Must inherit from class 'httr2_response', but has class 'function'.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>tibble<span class="sc">::</span><span class="fu">as_tibble</span>(data_name)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! objeto 'data_name' não encontrado</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># importar dados do DHIS2 usando IDs</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>data_id <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">read_dhis2</span>(</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">login =</span> dhis2_login,</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">org_unit =</span> <span class="st">"vRC0stJ5y9Q"</span>,</span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">program =</span> <span class="st">"IpHINAT79UW"</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in `readepi::read_dhis2()`:
+! Assertion on 'login' failed: Must inherit from class 'httr2_response', but has class 'function'.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">identical</span>(data_id, data_name)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! objeto 'data_id' não encontrado</code></pre>
+</div>
+</div>
+<p>Observe que nem todas as unidades organizacionais estão cadastradas para um programa específico. Para descobrir quais unidades organizacionais executam um determinado programa, use a função <code>get_program_org_units()</code>, como mostrado abaixo:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># obter a lista de unidades organizacionais que executam o programa "IpHINAT79UW"</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>target_org_units <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">get_program_org_units</span>(</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">login =</span> dhis2_login,</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">program =</span> <span class="st">"IpHINAT79UW"</span>,</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">org_units =</span> org_units</span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in `login[["url"]]`:
+! objeto de tipo 'closure' não possível dividir em subconjuntos</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>tibble<span class="sc">::</span><span class="fu">as_tibble</span>(target_org_units)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! objeto 'target_org_units' não encontrado</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Sobre o servidor de demonstração">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Sobre o servidor de demonstração
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Este exemplo usa um sistema de demonstração fornecido pela organização do DHIS2 (<a href="https://test.e2e.dhis2.org/">organization</a>) para fins de teste e desenvolvimento. Na prática, você deve personalizar os parâmetros para sua própria instância do DHIS2.</p>
+</div>
+</div>
+<div class="desafio callout callout-style-default callout-tip callout-titled" title="Desafio">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Desafio
+</div>
+</div>
+<section id="ler-dados-de-um-servidor-dhis2" class="level3 callout-body-container callout-body">
+<h3 class="anchored" data-anchor-id="ler-dados-de-um-servidor-dhis2">Ler dados de um servidor DHIS2</h3>
+<p>Teste o <code>{readepi}</code> acessando um servidor DHIS2 com suas credenciais. Faça o seguinte:</p>
+<ul>
+<li>Conecte-se a um servidor diferente,</li>
+<li>Liste todos os programas e unidades organizacionais disponíveis,</li>
+<li>Leia dados de um desses programas,</li>
+<li>Opcional: Reproduza uma figura descritiva.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled" title="Dica">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-19-contents" aria-controls="callout-19" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Dica
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-19" class="callout-19-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Tente usar <code>rstudioapi::askForPassword()</code> para <code>user_name</code> e <code>password</code>.</p>
+<p>Se você encontrar erros, por favor abra uma issue no <a href="https://github.com/epiverse-trace/readepi/issues/">repositório do GitHub do <code>readepi</code></a>.</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+</section>
+<section id="importar-dados-do-sormas" class="level3">
+<h3 class="anchored" data-anchor-id="importar-dados-do-sormas">Importar dados do SORMAS</h3>
+<p>O <a href="https://sormas.org/">SORMAS</a> (Surveillance Outbreak Response Management and Analysis System) é um sistema de saúde digital (e-health) de código aberto que otimiza os processos de vigilância de doenças infecciosas e resposta a surtos. A função <code>readepi::read_sormas()</code> permite importar dados do SORMAS por meio de sua API.</p>
+<p>Na versão atual do pacote <code>{readepi}</code>, a função <code>read_sormas()</code> retorna dados para as seguintes colunas: <strong>case_id, person_id, sex, date_of_birth, case_origin, country, city, lat, long, case_status, date_onset, date_admission, date_last_contact, date_first_contact, outcome, date_outcome</strong> e <strong>Ct_values</strong>.</p>
+<p>O bloco de código abaixo demonstra como importar dados de um sistema de demonstração do SORMAS:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># CONECTAR AO SISTEMA SORMAS</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>sormas_login <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">login</span>(</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"sormas"</span>,</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">from =</span> <span class="st">"https://demo.sormas.org/sormas-rest"</span>,</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">user_name =</span> <span class="st">"SurvSup"</span>,</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">password =</span> <span class="st">"Lk5R7JXeZSEc"</span></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a><span class="co"># EXTRAIR TODOS OS CASOS DE COVID (Coronavírus) DA INSTÂNCIA DE TESTE DO SORMAS</span></span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>covid_cases <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">read_sormas</span>(</span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">login =</span> sormas_login,</span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">disease =</span> <span class="st">"coronavirus"</span>,</span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb52-14"><a href="#cb52-14" aria-hidden="true" tabindex="-1"></a>tibble<span class="sc">::</span><span class="fu">as_tibble</span>(covid_cases)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 15
+  case_id             person_id date_onset case_origin case_status outcome sex  
+  &lt;chr&gt;               &lt;chr&gt;     &lt;date&gt;     &lt;chr&gt;       &lt;chr&gt;       &lt;chr&gt;   &lt;chr&gt;
+1 TYG7I3-2GONYO-JDJP… QJXOUU-6… NA         IN_COUNTRY  SUSPECT     NO_OUT… &lt;NA&gt; 
+2 ULMPMT-PBQOQ2-ETGY… WVP6NB-J… 2026-05-31 IN_COUNTRY  NOT_CLASSI… NO_OUT… &lt;NA&gt; 
+3 TNXDHJ-JMGYJY-BZLT… QLUAXH-J… NA         IN_COUNTRY  NOT_CLASSI… NO_OUT… &lt;NA&gt; 
+# ℹ 8 more variables: date_of_birth &lt;chr&gt;, country &lt;chr&gt;, city &lt;chr&gt;,
+#   latitude &lt;chr&gt;, longitude &lt;chr&gt;, contact_id &lt;chr&gt;,
+#   date_last_contact &lt;date&gt;, Ct_values &lt;chr&gt;</code></pre>
+</div>
+</div>
+<p>Um parâmetro fundamental é o nome da doença. Para garantir a sintaxe correta, você pode recuperar a lista de nomes de doenças disponíveis usando a função <code>sormas_get_diseases()</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># obter a lista de todos os nomes de doenças</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>disease_names <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">sormas_get_diseases</span>(</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">login =</span> sormas_login</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>tibble<span class="sc">::</span><span class="fu">as_tibble</span>(disease_names)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 69 × 2
+   disease            active
+   &lt;chr&gt;              &lt;chr&gt; 
+ 1 AFP                TRUE  
+ 2 CHOLERA            TRUE  
+ 3 CONGENITAL_RUBELLA TRUE  
+ 4 DENGUE             TRUE  
+ 5 EVD                TRUE  
+ 6 GUINEA_WORM        TRUE  
+ 7 LASSA              TRUE  
+ 8 MONKEYPOX          TRUE  
+ 9 NEW_INFLUENZA      TRUE  
+10 PLAGUE             TRUE  
+# ℹ 59 more rows</code></pre>
+</div>
+</div>
+<div class="desafio callout callout-style-default callout-tip callout-titled" title="Desafio">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Dica</span>Desafio
+</div>
+</div>
+<section id="ler-dados-de-um-servidor-de-demonstração-do-sormas" class="level3 callout-body-container callout-body">
+<h3 class="anchored" data-anchor-id="ler-dados-de-um-servidor-de-demonstração-do-sormas">Ler dados de um servidor de demonstração do SORMAS</h3>
+<p>A organização SORMAS também fornece servidores de demonstração para desenvolvimento e testes. Um deles é chamado <strong>clinical surveillance</strong>, disponível no link (“https://demo.sormas.org/sormas-rest”) e acessível com o nome de usuário “CaseSup” e senha “SJgFKffPDmr7”. Conecte-se a esse servidor, liste todas as doenças disponíveis e importe os casos relacionados à varíola dos macacos (mpox).</p>
+<div class="solucao callout callout-style-default callout-note callout-titled" title="Solução">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-21-contents" aria-controls="callout-21" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Solução
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-21" class="callout-21-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># estabelecer a conexão com o sistema</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>sormas_demo <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">login</span>(</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">type =</span> <span class="st">"sormas"</span>,</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">from =</span> <span class="st">"https://demo.sormas.org/sormas-rest"</span>,</span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">user_name =</span> <span class="st">"CaseSup"</span>,</span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">password =</span> <span class="st">"SJgFKffPDmr7"</span></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Listar os nomes de todas as doenças</span></span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a>demo_diseases <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">sormas_get_diseases</span>(<span class="at">login =</span> sormas_demo)</span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a>tibble<span class="sc">::</span><span class="fu">as_tibble</span>(demo_diseases)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 69 × 2
+   disease            active
+   &lt;chr&gt;              &lt;chr&gt; 
+ 1 AFP                TRUE  
+ 2 CHOLERA            TRUE  
+ 3 CONGENITAL_RUBELLA TRUE  
+ 4 DENGUE             TRUE  
+ 5 EVD                TRUE  
+ 6 GUINEA_WORM        TRUE  
+ 7 LASSA              TRUE  
+ 8 MONKEYPOX          TRUE  
+ 9 NEW_INFLUENZA      TRUE  
+10 PLAGUE             TRUE  
+# ℹ 59 more rows</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># obter a lista de todos os nomes de doenças</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>mpox_cases <span class="ot">&lt;-</span> readepi<span class="sc">::</span><span class="fu">read_sormas</span>(</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">login =</span> sormas_demo,</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">disease =</span> <span class="st">"monkeypox"</span>,</span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in `httr2::req_perform()`:
+! HTTP 403 Forbidden.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>tibble<span class="sc">::</span><span class="fu">as_tibble</span>(mpox_cases)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! objeto 'mpox_cases' não encontrado</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="Pontos-chave">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Pontos-chave
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Use <code>{rio}</code>, <code>{io}</code>, <code>{readr}</code> ou <code>{ImportExport}</code> para ler dados de arquivos individuais.</li>
+<li>Use <code>{readepi}</code> para ler dados de RDBMS e SIS.</li>
+<li>O pacote <code>{rio}</code> suporta uma ampla variedade de formatos de arquivo, incluindo <code>CSV</code>, <code>TSV</code>, <code>XLSX</code> e arquivos compactados.</li>
+<li>Use <code>readepi::login()</code> para estabelecer conexões com sistemas RDBMS, DHIS2 ou SORMAS.</li>
+<li>O pacote <code>{readepi}</code> atualmente suporta a importação de dados dos sistemas de informação em saúde DHIS2 e SORMAS.</li>
+</ul>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiada");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiada");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../setup.html" class="pagination-link" aria-label="Configuração">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Configuração</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../episodios/02-limpar-dados.html" class="pagination-link" aria-label="Limpar dados de casos">
+        <span class="nav-page-text"><span class="chapter-title">Limpar dados de casos</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Baseado em Epiverse-TRACE <em>Tutorials Early</em> (CC-BY 4.0)</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/MVMLima/tutorials-early-pt/edit/main/episodios/01-ler-dados.qmd" class="toc-action"><i class="bi bi-github"></i>Editar essa página</a></li><li><a href="https://github.com/MVMLima/tutorials-early-pt/issues/new" class="toc-action"><i class="bi empty"></i>Criar uma issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Adaptação PT-BR: Marcos V. M. de Lima</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

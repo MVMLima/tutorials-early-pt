@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="pt-BR" xml:lang="pt-BR"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Apêndice B — Notas para quem conduz a oficina – Análise de dados de surto com R</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./licenca.html" rel="next">
+<link href="./glossario.html" rel="prev">
+<link href="./img/pkgs-hexlogos.png" rel="icon" type="image/png">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-4f8723c4e91b4923163491bd987d7814.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Nenhum resultado",
+    "search-matching-documents-text": "documentos correspondentes",
+    "search-copy-link-title": "Copiar link para a busca",
+    "search-hide-matches-text": "Esconder correspondências adicionais",
+    "search-more-match-text": "mais correspondência neste documento",
+    "search-more-matches-text": "mais correspondências neste documento",
+    "search-clear-button-title": "Limpar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Procurar"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./glossario.html">Apêndices</a></li><li class="breadcrumb-item"><a href="./instrutor.html"><span class="chapter-title">Notas para quem conduz a oficina</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Procurar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Análise de dados de surto com R</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/MVMLima/tutorials-early-pt" title="Código fonte" class="quarto-navigation-tool px-1" aria-label="Código fonte"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Compartilhar" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Compartilhar"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Procurar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Análise de dados de surto com R</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./setup.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Configuração</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./episodios/01-ler-dados.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Ler dados de casos</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./episodios/02-limpar-dados.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Limpar dados de casos</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./episodios/03-validar-dados.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Validar dados de casos</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./episodios/04-agregar-visualizar.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Agregar e visualizar</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Apêndices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar seção">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./glossario.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Glossário de termos</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./instrutor.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">Notas para quem conduz a oficina</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./licenca.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Licença e créditos</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Nesta página</h2>
+   
+  <ul>
+  <li><a href="#tempos-sugeridos" id="toc-tempos-sugeridos" class="nav-link active" data-scroll-target="#tempos-sugeridos">Tempos sugeridos</a></li>
+  <li><a href="#pré-requisitos-dos-participantes" id="toc-pré-requisitos-dos-participantes" class="nav-link" data-scroll-target="#pré-requisitos-dos-participantes">Pré-requisitos dos participantes</a></li>
+  <li><a href="#antes-da-oficina-checklist-de-preparação" id="toc-antes-da-oficina-checklist-de-preparação" class="nav-link" data-scroll-target="#antes-da-oficina-checklist-de-preparação">Antes da oficina: checklist de preparação</a></li>
+  <li><a href="#como-conduzir-cada-episódio" id="toc-como-conduzir-cada-episódio" class="nav-link" data-scroll-target="#como-conduzir-cada-episódio">Como conduzir cada episódio</a>
+  <ul class="collapse">
+  <li><a href="#ler-dados-de-casos" id="toc-ler-dados-de-casos" class="nav-link" data-scroll-target="#ler-dados-de-casos">1. Ler dados de casos</a></li>
+  <li><a href="#limpar-dados-de-casos" id="toc-limpar-dados-de-casos" class="nav-link" data-scroll-target="#limpar-dados-de-casos">2. Limpar dados de casos</a></li>
+  <li><a href="#validar-dados-e-marcar-casos" id="toc-validar-dados-e-marcar-casos" class="nav-link" data-scroll-target="#validar-dados-e-marcar-casos">3. Validar dados e marcar casos</a></li>
+  <li><a href="#agregar-e-visualizar" id="toc-agregar-e-visualizar" class="nav-link" data-scroll-target="#agregar-e-visualizar">4. Agregar e visualizar</a></li>
+  </ul></li>
+  <li><a href="#onde-as-turmas-costumam-travar" id="toc-onde-as-turmas-costumam-travar" class="nav-link" data-scroll-target="#onde-as-turmas-costumam-travar">Onde as turmas costumam travar</a></li>
+  <li><a href="#adaptando-para-os-seus-dados" id="toc-adaptando-para-os-seus-dados" class="nav-link" data-scroll-target="#adaptando-para-os-seus-dados">Adaptando para os seus dados</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/MVMLima/tutorials-early-pt/edit/main/instrutor.qmd" class="toc-action"><i class="bi bi-github"></i>Editar essa página</a></li><li><a href="https://github.com/MVMLima/tutorials-early-pt/issues/new" class="toc-action"><i class="bi empty"></i>Criar uma issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./glossario.html">Apêndices</a></li><li class="breadcrumb-item"><a href="./instrutor.html"><span class="chapter-title">Notas para quem conduz a oficina</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title">Apêndice B — Notas para quem conduz a oficina</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Este guia é para quem vai <strong>ministrar</strong> a oficina. Ele não substitui os episódios: traz os tempos, o que demonstrar e o que deixar para os participantes fazerem, e onde as turmas costumam travar.</p>
+<section id="tempos-sugeridos" class="level2">
+<h2 class="anchored" data-anchor-id="tempos-sugeridos">Tempos sugeridos</h2>
+<p>Os tempos de ensino e de exercícios de cada episódio vêm do próprio material original:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Episódio</th>
+<th>Ensino</th>
+<th>Exercícios</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1. Ler dados de casos</td>
+<td>20 min</td>
+<td>10 min</td>
+<td>30 min</td>
+</tr>
+<tr class="even">
+<td>2. Limpar dados de casos</td>
+<td>45 min</td>
+<td>15 min</td>
+<td>60 min</td>
+</tr>
+<tr class="odd">
+<td>3. Validar dados e marcar casos</td>
+<td>20 min</td>
+<td>10 min</td>
+<td>30 min</td>
+</tr>
+<tr class="even">
+<td>4. Agregar e visualizar</td>
+<td>20 min</td>
+<td>10 min</td>
+<td>30 min</td>
+</tr>
+<tr class="odd">
+<td><strong>Total</strong></td>
+<td></td>
+<td></td>
+<td><strong>2h30</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Com a preparação de ambiente e as paradas para dúvidas, uma oficina completa costuma ocupar <strong>meio período (3h a 4h)</strong>. Se você tiver menos tempo, o recorte mais útil é o episódio 2 (limpeza) seguido do 4 (incidência e curva epidêmica).</p>
+</section>
+<section id="pré-requisitos-dos-participantes" class="level2">
+<h2 class="anchored" data-anchor-id="pré-requisitos-dos-participantes">Pré-requisitos dos participantes</h2>
+<ul>
+<li>R intermediário: ler dados, transformar, reorganizar e fazer gráficos.</li>
+<li>Familiaridade com <code>{dplyr}</code>, <code>{tidyr}</code> e <code>{ggplot2}</code>.</li>
+<li>Uso do pipe (<code>%&gt;%</code> ou <code>|&gt;</code>).</li>
+<li>Conceitos básicos de estatística e de teoria de epidemias — <strong>não</strong> é preciso saber modelagem.</li>
+</ul>
+<p>Se a turma não tiver esse repertório, reserve um bloco antes da oficina para revisar manipulação de dados com <code>{dplyr}</code>, ou indique o material introdutório de R do <a href="https://www.epirhandbook.com/"><em>The Epidemiologist R Handbook</em></a> e os <a href="https://appliedepi.org/resources/tutorials.html">tutoriais da Applied Epi</a>.</p>
+</section>
+<section id="antes-da-oficina-checklist-de-preparação" class="level2">
+<h2 class="anchored" data-anchor-id="antes-da-oficina-checklist-de-preparação">Antes da oficina: checklist de preparação</h2>
+<ol type="1">
+<li><strong>Mande a página de <a href="../setup.qmd">Setup</a> com antecedência</strong> e peça que todos instalem R, as ferramentas de compilação e os pacotes <strong>em casa</strong>. A instalação dos pacotes do Epiverse compila código-fonte e pode levar bastante tempo; fazer isso na sala consome a oficina inteira.</li>
+<li><strong>Confirme que os pacotes carregam</strong> na máquina de cada participante: <code>library(readepi)</code>, <code>library(cleanepi)</code>, <code>library(linelist)</code>, <code>library(simulist)</code>, <code>library(incidence2)</code>.</li>
+<li><strong>Baixe os dados com antecedência.</strong> Todos os arquivos usados no curso estão na pasta <a href="../data/"><code>data/</code></a> deste site. Se a rede da sala for ruim, distribua os arquivos em pendrive e peça que cada participante crie uma pasta <code>data/</code> dentro do projeto do R.</li>
+<li><strong>Tenha um plano B para as partes que dependem de internet</strong>: a leitura de dados por API (DHIS2 e SORMAS) e a conexão com bancos de dados usam servidores de demonstração. Verificamos em 20/09/2026 que os dois endereços usados na lição estavam fora do ar (<code>play.im.dhis2.org</code> respondia 404 e <code>demo.sormas.org/sormas-rest</code>, 500), então o trecho renderiza mensagem de erro em vez de resultado. Faça a demonstração explicando o que a chamada faria e siga para a leitura de arquivos locais — o que importa é o conceito, não a saída.</li>
+<li><strong>Projetor</strong>: os blocos de código ficam pequenos em telas grandes. Aumente o zoom do editor e do console antes de começar.</li>
+<li><strong>Combine a pasta de trabalho.</strong> O curso usa projetos do R e caminhos relativos com o pacote <code>{here}</code>. Peça que todos criem a mesma estrutura de projeto, com a pasta <code>data/</code> na raiz.</li>
+</ol>
+</section>
+<section id="como-conduzir-cada-episódio" class="level2">
+<h2 class="anchored" data-anchor-id="como-conduzir-cada-episódio">Como conduzir cada episódio</h2>
+<section id="ler-dados-de-casos" class="level3">
+<h3 class="anchored" data-anchor-id="ler-dados-de-casos">1. Ler dados de casos</h3>
+<p>O que demonstrar na projeção: a criação do projeto do R, a leitura de um CSV com <code>{rio}</code> e o motivo de usar <code>{here}</code> em vez de caminhos absolutos.</p>
+<p>O que deixar para os participantes fazerem: importar os arquivos <code>ebola_cases_2.csv</code> e <code>Marburg.zip</code> e abrir o objeto resultante. Os desafios sobre formatos alternativos (Excel, SPSS) funcionam bem em duplas.</p>
+<p>Ponto de atenção: as seções de banco de dados e de APIs de sistemas de informação (<code>{readepi}</code>) são as mais lentas e as mais dependentes de rede. Não deixe que elas consumam o tempo do episódio — o essencial aqui é a leitura de arquivos e o entendimento de que os dados podem vir de várias fontes.</p>
+</section>
+<section id="limpar-dados-de-casos" class="level3">
+<h3 class="anchored" data-anchor-id="limpar-dados-de-casos">2. Limpar dados de casos</h3>
+<p>É o episódio mais longo e o mais rico. A sequência é: diagnosticar os problemas, padronizar nomes de colunas, remover irregularidades, tratar valores ausentes, converter datas.</p>
+<p>O que demonstrar: a inspeção inicial dos dados brutos e o uso de <code>cleanepi::clean_data()</code> com várias operações de uma vez.</p>
+<p>O que deixar para os participantes fazerem: os desafios de padronização de nomes de colunas e o de remoção de linhas e colunas irregulares. Peça que comparem as dimensões do objeto antes e depois — o material tem uma checagem para isso.</p>
+</section>
+<section id="validar-dados-e-marcar-casos" class="level3">
+<h3 class="anchored" data-anchor-id="validar-dados-e-marcar-casos">3. Validar dados e marcar casos</h3>
+<p>O foco é converter o data frame em um <code>linelist</code>, marcar as colunas por papel (identificador, data de início, desfecho) e validar com dicionário de dados.</p>
+<p>O que demonstrar: o cenário de “mudança inesperada” no meio do surto e como a validação do <code>{linelist}</code> avisa sobre isso.</p>
+<p>O que deixar para os participantes fazerem: criar o linelist, marcar as colunas e testar o que acontece quando uma coluna perde a marcação.</p>
+</section>
+<section id="agregar-e-visualizar" class="level3">
+<h3 class="anchored" data-anchor-id="agregar-e-visualizar">4. Agregar e visualizar</h3>
+<p>Aqui o linelist deixa de ser uma tabela de casos e vira incidência ao longo do tempo — a curva epidêmica.</p>
+<p>O que demonstrar: <code>incidence2::incidence()</code> por sexo e por semana, e uma curva epidêmica com <code>{ggplot2}</code>.</p>
+<p>O que deixar para os participantes fazerem: os desafios de agregação em intervalos de duas semanas e a interpretação dos tipos de curva (fonte pontual, fonte propagada).</p>
+<p>Ponto de atenção: a discussão sobre <strong>atraso de notificação</strong> (censura à direita) é o gancho para o próximo curso da trilha (análise em tempo real e nowcasting). Vale deixar alguns minutos para essa conversa.</p>
+</section>
+</section>
+<section id="onde-as-turmas-costumam-travar" class="level2">
+<h2 class="anchored" data-anchor-id="onde-as-turmas-costumam-travar">Onde as turmas costumam travar</h2>
+<ul>
+<li><strong>Caminhos de arquivo.</strong> Erro clássico: rodar o código sem estar dentro do projeto do R, ou com os dados em uma pasta diferente de <code>data/</code>. Resolva mostrando <code>here::here("data")</code> na projeção e conferindo o diretório de trabalho com <code>getwd()</code>.</li>
+<li><strong>Datas.</strong> Os dados brutos têm datas em mais de um formato na mesma coluna. O material trata disso no episódio 2; antecipe que é normal e que a padronização é justamente parte do trabalho.</li>
+<li><strong>Pacotes que não carregam.</strong> Quase sempre é instalação incompleta (compilação que falhou em casa). Tenha um participante de referência com o ambiente pronto, ou uma máquina sua pronta para emprestar.</li>
+<li><strong>Colunas com nomes diferentes do esperado.</strong> Se os participantes usarem dados próprios, o nome das colunas muda e o código precisa ser ajustado. Isso é esperado: aproveite para discutir dicionário de dados.</li>
+</ul>
+</section>
+<section id="adaptando-para-os-seus-dados" class="level2">
+<h2 class="anchored" data-anchor-id="adaptando-para-os-seus-dados">Adaptando para os seus dados</h2>
+<p>O curso inteiro é construído sobre dados de exemplo de surtos (ebola, Marburg e dados simulados). A forma de trazer a realidade local para a oficina é trocar os arquivos da pasta <code>data/</code> pelos seus — mantendo as mesmas colunas usadas no material (<code>id</code>, <code>date_onset</code>, <code>date_outcome</code>, <code>sex</code>, <code>age</code>, <code>outcome</code>) — e conduzir os mesmos passos de limpeza e validação.</p>
+<p>Antes de usar uma base real, verifique a política de uso dos dados no seu serviço e trabalhe, sempre que possível, com uma <strong>base anonimizada</strong>: remova nomes, documentos e qualquer campo que identifique a pessoa. Dados de saúde são dados pessoais sensíveis e o compartilhamento em sala de aula precisa seguir a LGPD e as regras da sua instituição.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiada");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiada");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./glossario.html" class="pagination-link" aria-label="Glossário de termos">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Glossário de termos</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./licenca.html" class="pagination-link" aria-label="Licença e créditos">
+        <span class="nav-page-text"><span class="chapter-title">Licença e créditos</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Baseado em Epiverse-TRACE <em>Tutorials Early</em> (CC-BY 4.0)</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/MVMLima/tutorials-early-pt/edit/main/instrutor.qmd" class="toc-action"><i class="bi bi-github"></i>Editar essa página</a></li><li><a href="https://github.com/MVMLima/tutorials-early-pt/issues/new" class="toc-action"><i class="bi empty"></i>Criar uma issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Adaptação PT-BR: Marcos V. M. de Lima</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
