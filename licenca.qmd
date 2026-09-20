@@ -46,5 +46,3 @@ alterações.
 
 Se você encontrar erro de tradução, link quebrado ou explicação confusa, abra uma *issue* no
 repositório: <https://github.com/MVMLima/tutorials-early-pt/issues>
-
-<!-- teste da guarda: edicao sem render local -->
