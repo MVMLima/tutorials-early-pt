@@ -293,6 +293,7 @@ cleaned_data %>%
 Recebemos mensagens de `Error` porque o tipo padrão dessas variáveis em `linelist::tags_types()` é diferente daquele que atribuímos.
 
 A mensagem de `Error` nos informa que, para **validar** nosso linelist, devemos corrigir o tipo da variável de entrada para que corresponda ao tipo esperado pela tag. Em um script de análise de dados, podemos fazer isso adicionando uma etapa de limpeza ao pipeline.
+
 :::
 
 :::

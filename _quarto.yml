@@ -1,6 +1,7 @@
 project:
   type: book
   output-dir: _site
+  execute-dir: project
   resources:
     - data
 
@@ -37,7 +38,8 @@ book:
 format:
   html:
     lang: pt-BR
-    theme: [cosmo, styles.css]
+    theme: cosmo
+    css: styles.css
     toc: true
     toc-depth: 3
     toc-title: "Nesta página"
@@ -53,6 +55,5 @@ format:
 
 execute:
   freeze: auto
+  error: true
   warning: true
-
-editor: positron

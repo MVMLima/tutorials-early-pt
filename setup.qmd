@@ -183,6 +183,7 @@ new_packages <- c(
   "linelist",
   "simulist",
   "incidence2",
+  "ciTools",
   "epiverse-trace/tracetheme",
   "tidyverse"
 )
@@ -279,6 +280,7 @@ library(dbplyr)
 library(linelist)
 library(simulist)
 library(incidence2)
+library(ciTools)
 library(tracetheme)
 library(tidyverse)
 ```

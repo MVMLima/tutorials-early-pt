@@ -45,8 +45,11 @@ manipulação de dados com `{dplyr}`, ou indique o material introdutório de R d
    [`data/`](../data/) deste site. Se a rede da sala for ruim, distribua os arquivos em pendrive
    e peça que cada participante crie uma pasta `data/` dentro do projeto do R.
 4. **Tenha um plano B para as partes que dependem de internet**: a leitura de dados por API
-   (DHIS2 e SORMAS) e a conexão com bancos de dados usam servidores de demonstração. Se a rede
-   falhar, faça a demonstração você mesmo na projeção e siga para a leitura de arquivos locais.
+   (DHIS2 e SORMAS) e a conexão com bancos de dados usam servidores de demonstração. Verificamos
+   em 20/09/2026 que os dois endereços usados na lição estavam fora do ar
+   (`play.im.dhis2.org` respondia 404 e `demo.sormas.org/sormas-rest`, 500), então o trecho
+   renderiza mensagem de erro em vez de resultado. Faça a demonstração explicando o que a chamada
+   faria e siga para a leitura de arquivos locais — o que importa é o conceito, não a saída.
 5. **Projetor**: os blocos de código ficam pequenos em telas grandes. Aumente o zoom do editor
    e do console antes de começar.
 6. **Combine a pasta de trabalho.** O curso usa projetos do R e caminhos relativos com o pacote

@@ -390,6 +390,8 @@ Convidamos você a descobrir o pacote-chave que torna essa padronização possí
 Além disso, veja como usar o argumento `orders` se quiser trabalhar com strings no formato dos Estados Unidos (EUA).
 Participe da discussão sobre [este exemplo reproduzível](https://github.com/epiverse-trace/cleanepi/discussions/262).
 
+:::
+
 ::: {.callout-note title="No Brasil: formato de data"}
 
 A convenção de escrita de datas no Brasil é **DD/MM/AAAA**, então, ao padronizar datas vindas de
@@ -398,8 +400,6 @@ caminho seguro é declarar explicitamente a ordem esperada em vez de deixar o R 
 
 :::
 
-
-:::
 
 
 ### Verificar a sequência de eventos com datas
@@ -563,6 +563,7 @@ dat_clean %>%
 :::
 
 O que diferencia `cleanepi::timespan()` de `dplyr::mutate()` é a facilidade com que você pode calcular diferenças de tempo em diferentes unidades de tempo (usando o argumento `span_unit`) e como você pode obter o tempo restante em uma coluna diferente e em uma unidade de tempo diferente (usando `span_remainder_unit`). Veja a caixa de detalhes abaixo para um exemplo:
+
 ::: {.callout-note title="Detalhes" collapse="true"}
 
 Calcule a idade em anos de cada indivíduo até 3 de janeiro de 2025 (`"2025-01-03"`) a partir de sua data de nascimento, e o tempo restante em meses.

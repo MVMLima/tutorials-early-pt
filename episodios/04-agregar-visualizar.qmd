@@ -107,7 +107,9 @@ daily_incidence
 ```
 
 Você pode usar valores numéricos, como o número de dias para agrupar, ou cadeias de caracteres (strings de texto) como `day`, `week`, `epiweek`, `months` e outras para definir o intervalo de agregação:
+
 ::: {.callout-note title="No Brasil: semana epidemiológica"}
+
 
 A vigilância brasileira agrega os dados por **Semana Epidemiológica (SE)**, que corresponde ao
 `epiweek` do `{incidence2}`. Por convenção internacional, as semanas epidemiológicas são contadas
@@ -401,6 +403,7 @@ Casos recentes são frequentemente subcontados. Se houver um intervalo de tempo 
 Embora isso não seja um problema para o surto já encerrado mostrado acima, essa é uma consideração fundamental para **surtos em andamento ou em crescimento**, nos quais um declínio aparente recente pode refletir apenas o atraso na notificação, e não uma desaceleração real.
 
 :::
+
 ::: {.callout-note title="No Brasil: dados preliminares e dados finais"}
 
 Para o SINAN, o DATASUS publica duas bases: os **dados preliminares**, passíveis de atualização e

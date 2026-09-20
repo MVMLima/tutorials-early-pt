@@ -63,6 +63,7 @@ A página **[Notas para quem conduz a oficina](instrutor.qmd)** traz os tempos s
 episódio, o que demonstrar e o que deixar para os participantes fazerem, e os problemas mais
 comuns de sala. Os arquivos de dados usados no curso ficam na pasta [`data/`](data/) deste site
 e podem ser baixados antes, caso a rede da sala falhe.
+
 :::
 
 ## Créditos

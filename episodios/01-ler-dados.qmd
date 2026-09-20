@@ -7,6 +7,7 @@ title: 'Ler dados de casos'
 - Onde você costuma armazenar dados de surto?
 - Quais formatos de dados você costuma usar para análise? 
 - Você pode importar dados diretamente de servidores e sistemas de informação em saúde? 
+
 :::
 
 ::: {.callout-tip title="Objetivos"}
@@ -14,6 +15,7 @@ title: 'Ler dados de casos'
 - Identificar fontes comuns de dados de surto. 
 - Importar dados de surto de múltiplos formatos para o ambiente do `R`.
 - Acessar e extrair dados de servidores remotos e sistemas de informação em saúde usando APIs.
+
 :::
 
 ::: {.callout-important title="Pré-requisitos"}
@@ -163,6 +165,7 @@ rio::install_formats()
 ```{r eval=FALSE}
 rio::import(here::here("data", "Marburg.zip"))
 ```
+
 :::
 
 :::
@@ -401,6 +404,7 @@ dhis2_login <- readepi::login(
 ```
 
 Você pode ler mais nesta postagem de blog sobre [Como evitar a publicação de credenciais no seu código](https://rviews.rstudio.com/2019/03/21/how-to-avoid-publishing-credentials-in-your-code/)
+
 :::
 
 ```{r}
@@ -456,11 +460,11 @@ target_org_units <- readepi::get_program_org_units(
 tibble::as_tibble(target_org_units)
 ```
 
-<!-- :::::::::::::::: callout
+::: {.callout-note title="Sobre o servidor de demonstração"}
 
-Nota: Este exemplo usa um sistema de demonstração fornecido pela organização do DHIS2 [organization](https://test.e2e.dhis2.org/) para fins de teste e desenvolvimento. Na prática, você deve personalizar os parâmetros para sua própria instância do DHIS2. 
+Este exemplo usa um sistema de demonstração fornecido pela organização do DHIS2 ([organization](https://test.e2e.dhis2.org/)) para fins de teste e desenvolvimento. Na prática, você deve personalizar os parâmetros para sua própria instância do DHIS2.
 
-:::::::::::::::: -->
+:::
 
 ::: {.callout-tip .desafio title="Desafio"}
 
@@ -478,6 +482,7 @@ Faça o seguinte:
 Tente usar `rstudioapi::askForPassword()` para `user_name` e `password`.
 
 Se você encontrar erros, por favor abra uma issue no [repositório do GitHub do `readepi`](https://github.com/epiverse-trace/readepi/issues/).
+
 :::
 
 :::

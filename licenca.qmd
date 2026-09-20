@@ -38,6 +38,9 @@ alterações.
 - Inclusão de caixas de contexto brasileiro (ligações com SINAN, DATASUS e a rotina de vigilância),
   escritas para esta adaptação.
 - Inclusão de um guia para quem conduz a oficina e do glossário traduzido.
+- Correções de defeitos do material original: o pacote `{ciTools}`, usado no episódio 4 e ausente
+  da lista de instalação, foi acrescentado à página de setup; o glossário ganhou a entrada
+  *Análise de surtos*, para a qual a página de setup já apontava sem que a âncora existisse.
 
 ## Avaliação, conserto e sugestões
 

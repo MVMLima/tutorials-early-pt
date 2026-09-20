@@ -13,3 +13,6 @@ _work/
 
 # sistema
 .DS_Store
+
+/.quarto/
+**/*.quarto_ipynb
