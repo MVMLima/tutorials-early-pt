@@ -26,6 +26,10 @@ PARES = [
     ("_source/en-quarto/glossario.qmd", "glossario.qmd"),
 ]
 
+# Linhas extras no bloco de código do PT que são correções documentadas do material
+# original (registradas em licenca.qmd). Qualquer outra diferença continua sendo erro.
+ADICOES_DOCUMENTADAS = {"ciTools"}
+
 
 def blocos_codigo(texto: str):
     """Devolve a lista de blocos de código (conteúdo bruto) de um arquivo .qmd."""
@@ -66,12 +70,21 @@ def checar(en_rel: str, pt_rel: str) -> list:
     if len(en_blocos) != len(pt_blocos):
         problemas.append(f"blocos de código: EN={len(en_blocos)} PT={len(pt_blocos)}")
     for i, (a, b) in enumerate(zip(en_blocos, pt_blocos), start=1):
-        if normalizar(a) != normalizar(b):
-            problemas.append(f"bloco de código {i} diferente do original")
-            for la, lb in zip(normalizar(a).split("\n"), normalizar(b).split("\n")):
-                if la != lb:
-                    problemas.append(f"    EN: {la[:110]}\n    PT: {lb[:110]}")
-                    break
+        na, nb = normalizar(a).split("\n"), normalizar(b).split("\n")
+        if na == nb:
+            continue
+        so_en = [l for l in na if l not in nb]
+        so_pt = [l for l in nb if l not in na]
+        # adições documentadas na página de licença (correção de defeito do original)
+        if not so_en and so_pt and all(any(x in l for x in ADICOES_DOCUMENTADAS) for l in so_pt):
+            continue
+        problemas.append(f"bloco de código {i} diferente do original")
+        for la, lb in zip(na, nb):
+            if la != lb:
+                problemas.append(f"    EN: {la[:110]}\n    PT: {lb[:110]}")
+                break
+        for extra in so_pt[:2]:
+            problemas.append(f"    (linha só no PT: {extra[:100]})")
 
     # 2. cercas de código
     for nome, txt in (("EN", en_txt), ("PT", pt_txt)):
