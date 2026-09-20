@@ -1,0 +1,758 @@
+---
+title: 'Agregar e visualizar'
+---
+
+::: {.callout-note title="Perguntas"}
+
+- Como agregar e resumir dados de casos?
+- Como visualizar dados agregados?
+- Qual é a distribuição dos casos no tempo, espaço, sexo e idade?
+
+:::
+
+::: {.callout-tip title="Objetivos"}
+
+- Simular dados sintéticos de surto
+- Converter dados de linelist (lista de casos) em incidência ao longo do tempo
+- Criar curvas epidêmicas a partir de dados de incidência
+
+:::
+
+::: {.callout-important title="Pré-requisitos"}
+
+**Pacotes do R instalados:** `{incidence2}`, `{simulist}`, `{tidyverse}`.
+
+:::
+
+::: {.callout-note title="Detalhes" collapse="true"}
+
+Instale estes pacotes caso ainda não estejam instalados (você pode configurar o espelho brasileiro do CRAN com `options(repos = c(CRAN = "https://cran-r.c3sl.ufpr.br/"))`):
+
+```r
+if (!base::require("pak")) install.packages("pak")
+pak::pak(c("incidence2", "simulist", "tidyverse"))
+```
+
+Se você encontrar qualquer mensagem de erro,
+acesse a [página principal de configuração](../setup.qmd#software-setup).
+
+:::
+
+## Introdução
+
+Em um fluxo de trabalho analítico, a análise exploratória de dados (AED) é uma etapa importante antes da modelagem formal.
+A AED ajuda a determinar relações entre variáveis e resumir suas principais características, frequentemente por meio da visualização de dados.
+
+Este episódio foca na AED de dados de surto usando pacotes do R. 
+Aspectos fundamentais da AED na análise de epidemias são **pessoa, lugar e tempo**. É útil identificar como eventos observados — como casos confirmados, hospitalizações, óbitos e recuperações — mudam ao longo do tempo e como variam entre diferentes locais e fatores demográficos, incluindo sexo, idade e outros.
+
+Vamos começar carregando o pacote `{incidence2}` para agregar os dados da linelist de acordo com características específicas e visualizar as curvas epidêmicas resultantes (epicurvas) que representam graficamente o número de novos eventos (ou seja, a incidência de casos ao longo do tempo).
+Usaremos o pacote `{simulist}` para simular os dados de surto a serem analisados.
+Usaremos o operador pipe (`%>%`) para conectar algumas de suas funções, incluindo outras dos pacotes `{dplyr}` e `{ggplot2}`, portanto vamos carregar também o pacote `{tidyverse}`.
+
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
+# Carregar pacotes
+library(incidence2) # Para agregar e visualizar
+library(simulist) # Para simular dados de linelist
+library(tidyverse) # Para funções do {dplyr} e {ggplot2} e o pipe %>%
+```
+
+## Dados sintéticos de surto
+
+Para ilustrar o processo de condução da AED em dados de surto, geraremos uma linelist para um surto hipotético de doença utilizando o pacote `{simulist}`.
+O `{simulist}` gera dados simulados para um surto de acordo com uma configuração fornecida.
+Sua configuração mínima pode gerar uma linelist, como mostrado no bloco de código abaixo:
+
+```{r, warning=FALSE}
+# Definir semente para reprodutibilidade
+set.seed(1)
+
+# Simular dados de linelist para um surto com tamanho entre 1000 e 1500
+sim_data <- simulist::sim_linelist(outbreak_size = c(1000, 1500)) %>%
+  dplyr::as_tibble() # para uma saída simples em data frame
+
+# Exibir o conjunto de dados simulado
+sim_data
+```
+
+Este conjunto de dados de linelist contém registros simulados de eventos em nível individual durante um surto.
+
+::: {.callout-note title="Detalhes" collapse="true"}
+
+### Recursos adicionais sobre dados de surto
+
+A configuração acima é a padrão do `{simulist}`.
+Ela inclui uma série de pressupostos sobre a transmissibilidade e a gravidade do patógeno.
+Se você quiser saber mais sobre a função `simulist::sim_linelist()` e outras funcionalidades, consulte o [site da documentação](https://epiverse-trace.github.io/simulist/).
+
+Você também pode encontrar conjuntos de dados de surtos reais anteriores no pacote do R [outbreaks](https://www.reconverse.org/outbreaks/).
+
+:::
+
+
+
+## Agregar a linelist 
+
+Muitas vezes queremos analisar e visualizar o número de eventos que ocorrem em um determinado dia ou semana, em vez de focar nos casos individuais. Isso exige converter os dados da linelist em dados de incidência. O pacote [{incidence2}](https://www.reconverse.org/incidence2/articles/incidence2.html) oferece uma função útil chamada `incidence2::incidence()` para agregar dados de casos em torno de eventos com data. Ele também pode agregar dados segundo outras características (por exemplo, sexo). O bloco de código fornecido abaixo demonstra a criação de um objeto da classe `<incidence2>` a partir dos dados simulados da linelist de Ebola com base na data de início dos sintomas.
+```{r}
+# Criar um objeto de incidência agregando dados de casos com base na data de início dos sintomas
+daily_incidence <- incidence2::incidence(
+  sim_data,
+  date_index = "date_onset",
+  interval = "day" # Agregar por intervalos diários
+)
+
+# Visualizar os dados de incidência
+daily_incidence
+```
+
+Você pode usar valores numéricos, como o número de dias para agrupar, ou cadeias de caracteres (strings de texto) como `day`, `week`, `epiweek`, `months` e outras para definir o intervalo de agregação:
+::: {.callout-note title="No Brasil: semana epidemiológica"}
+
+A vigilância brasileira agrega os dados por **Semana Epidemiológica (SE)**, que corresponde ao
+`epiweek` do `{incidence2}`. Por convenção internacional, as semanas epidemiológicas são contadas
+de **domingo a sábado**: a primeira semana do ano é a que contém o maior número de dias de
+janeiro, e a última é a que contém o maior número de dias de dezembro. Fonte: *Caderno de Análise
+— Roteiro para uso do SINAN Net* (SVS/MS, 2019), seção "Calendário Epidemiológico":
+<https://portalsinan.saude.gov.br/images/documentos/Agravos/Violencia/CADERNO_ANALISE_SINAN_Marco_2019_V1.pdf>.
+
+:::
+
+```{r}
+# Criar um objeto de incidência agregando dados de casos com base na data de início dos sintomas
+weekly_incidence <- incidence2::incidence(
+  sim_data,
+  date_index = "date_onset",
+  interval = "week" # Agregar por intervalos semanais
+)
+
+# Visualizar os dados de incidência
+weekly_incidence
+```
+
+Com o pacote `{incidence2}`, você pode especificar o intervalo de tempo desejado (por exemplo, dia, semana etc.) e categorizar os casos por um ou mais fatores. Abaixo está um trecho de código demonstrando casos semanais agrupados pela data de início dos sintomas, sexo e tipo de caso.
+
+```{r}
+# Agrupar dados de incidência por semana, considerando sexo e tipo de caso
+weekly_group_incidence <- incidence2::incidence(
+  sim_data,
+  date_index = "date_onset",
+  interval = "week", # Agregar por intervalos semanais
+  groups = c("sex", "case_type") # Agrupar por sexo e tipo de caso
+)
+
+# Visualizar os dados de incidência
+weekly_group_incidence
+```
+
+::: {.callout-note}
+
+### Preenchimento de datas
+
+Quando os casos são agrupados por diferentes fatores, é possível que os eventos envolvendo esses grupos apresentem intervalos de datas diferentes no objeto `incidence2` resultante. Por exemplo:
+```{r}
+# Criar um objeto de incidência diária agrupado por sexo
+incidence2::incidence(
+  sim_data,
+  date_index = "date_onset",
+  groups = "sex",
+  interval = "week",
+  complete_dates = FALSE # Padrão
+)
+```
+
+O pacote `{incidence2}` fornece uma função chamada `incidence2::complete_dates()` para garantir que um objeto de incidência tenha o mesmo intervalo de datas para cada grupo.
+Por padrão, contagens ausentes para um determinado grupo serão preenchidas com `0` para aquela data.
+
+Essa funcionalidade também está disponível dentro da função `incidence2::incidence()`, definindo o valor de `complete_dates` como `TRUE`.
+
+```{r}
+# Criar um objeto de incidência diária agrupado por sexo
+incidence2::incidence(
+  sim_data,
+  date_index = "date_onset",
+  groups = "sex",
+  interval = "week",
+  complete_dates = TRUE # Preencher datas e contagens ausentes
+)
+```
+
+:::
+
+::: {.callout-tip .desafio title="Desafio"}
+
+Use a linelist `sim_data` para:
+
+- Calcular a incidência de casos **a cada 2 semanas** para **duas datas diferentes**, a data de início dos sintomas e a data do desfecho, e **duas categorias diferentes**, sexo e tipo de caso.
+- Salvar o resultado em um objeto `<incidence2>` chamado `biweekly_incidence`.
+
+::: {.callout-note title="Dica" collapse="true"}
+
+Como mencionado acima, para configurar o intervalo de agregação podemos usar valores numéricos ou cadeias de caracteres (strings). Ou consulte o manual de referência da função `incidence2::incidence()` offline usando `?incidence2::incidence()` ou [online](https://www.reconverse.org/incidence2/manual.html#sec:man-incidence).
+
+Para agregar por dois ou mais índices de data, veja um exemplo neste guia prático sobre [Simular, limpar, validar linelist e traçar curvas epidêmicas](https://epiverse-trace.github.io/howto/analyses/describe_cases/simulist-cleanepi-messy-data.html). Lá contamos a incidência para três datas diferentes no mesmo objeto.
+
+:::
+
+:::
+
+::: {.callout-note title="Checklist"}
+
+**Por que converter a linelist em incidência?**
+
+- Para analisar dados por pessoa, lugar e tempo:
+
+    - Acompanhar como os eventos (casos, hospitalizações, óbitos, recuperações) mudam ao longo do tempo (por dia ou semana).
+    - Comparar padrões entre locais e grupos demográficos (por exemplo, idade, sexo, localização).
+
+- Também descrever e preparar os dados antes da modelagem. (Mais sobre isso no próximo conjunto de tutoriais!)
+
+:::
+
+## Visualização
+
+Os objetos `incidence2` podem ser visualizados usando a função `plot()` do pacote base do R.
+O gráfico resultante é chamado de curva epidêmica, ou epicurva (epicurve) de forma abreviada.
+Os seguintes trechos de código geram epicurvas para os objetos de incidência `daily_incidence` e `weekly_group_incidence` mencionados acima.
+
+```{r}
+# Traçar dados de incidência diária
+plot(daily_incidence)
+```
+
+Você pode optar pela unidade de tempo de agregação mais adequada para descrever o padrão de propagação ou transmissão.
+
+```{r}
+# Traçar dados de incidência semanal
+plot(weekly_incidence)
+```
+
+A visualização de um objeto `<incidence2>` baseia-se no pacote `{ggplot2}`, portanto [camadas do `ggplot`](https://ggplot2-book.org/layers.html) podem ser adicionadas ao gráfico como mostrado abaixo.
+
+```{r}
+# Traçar dados de incidência semanal
+plot(weekly_incidence) +
+  ggplot2::labs(
+    x = "Time (in weeks)", # rótulo do eixo x
+    y = "Number of cases", # rótulo do eixo y
+    title = "Epidemic curve, simulated outbreak",
+    subtitle = "Weekly case incidence by date of onset"
+  )
+```
+
+Além disso, forneça um gráfico estratificado por categorias para comparar padrões de transmissão entre diferentes grupos demográficos.
+
+```{r}
+# Traçar dados de incidência semanal
+plot(weekly_group_incidence) +
+  ggplot2::labs(
+    x = "Time (in weeks)", # rótulo do eixo x
+    y = "weekly cases" # rótulo do eixo y
+  )
+```
+
+::: {.callout-note}
+
+#### Estética facilitada
+
+Descubra como você pode usar os argumentos na função `plot()` para configurar a estética dos seus objetos `<incidence2>`.
+
+```{r}
+weekly_group_incidence %>%
+  plot(fill = "case_type")
+```
+
+Alguns deles incluem `show_cases = TRUE`, `angle = 45` e `n_breaks = 5`.
+Experimente usá-los e veja o impacto no gráfico resultante.
+
+```{r}
+weekly_group_incidence %>%
+  plot(fill = "sex", angle = 45)
+```
+
+Convidamos você a conferir o [manual de referência da função `plot()`](https://www.reconverse.org/incidence2/manual.html#sec:man-plot.incidence2).
+
+:::
+
+::: {.callout-tip .desafio title="Desafio"}
+
+Use o objeto `biweekly_incidence` criado no desafio anterior para:
+
+- Visualizar a curva de incidência.
+- Identificar qual combinação de argumentos em `plot()` funciona melhor.
+
+::: {.callout-note title="Dica" collapse="true"}
+
+Teste se argumentos como `fill`, `nrow`, `show_cases`, `angle` ou `n_breaks` melhoram o gráfico.
+
+Encontre mais um exemplo neste guia prático sobre [Traçar dados de incidência estratificados por idade mensalmente a partir da data de nascimento](https://epiverse-trace.github.io/howto/analyses/describe_cases/cleanepi-linelist-incidence2-stratified.html).
+
+:::
+
+:::
+
+::: {.callout-note title="Checklist"}
+
+**Quais são os desafios comuns ao agregar linelist em incidência?**
+
+- Agregar por *uma ou mais variáveis* conjuntamente:
+
+    - Por data (por exemplo, data de notificação e data do óbito) para análise de gravidade do surto.
+    - Por grupos (por exemplo, idade, sexo ou localização) para análises estratificadas de transmissão ou gravidade.
+
+- Obter uma *série temporal completa* para ter o mesmo intervalo de datas em cada agrupamento.
+
+:::
+
+## Como descrever uma curva epidêmica?
+
+Podemos descrever epicurvas comparando a tendência de novos casos ao longo do tempo entre grupos demográficos. Algumas características que podemos comparar são:
+
+- Tamanho do pico ou platô,
+- Tempo até o pico (se houver),
+- Taxa de crescimento.
+
+Por exemplo, na figura abaixo, temos duas curvas epidêmicas para o mesmo surto estratificadas por sexo. Na população, a maioria dos casos foi observada em pessoas do sexo feminino.
+
+- O tamanho do pico no sexo feminino foi de ~70 casos incidentes; no sexo masculino, foi de ~22 casos incidentes.
+- O pico no sexo feminino ocorreu por volta da semana epidemiológica 15; no sexo masculino, por volta da semana 20.
+- A taxa de crescimento no sexo feminino pode ser maior do que no masculino. Em um mesmo período de tempo (cerca de 15 semanas), os casos no sexo feminino foram mais de 3 vezes superiores aos casos no sexo masculino.
+
+```{r, echo = FALSE, warning=FALSE, fig.cap = "Weekly incidence of simulated cases by sex, with fitted growth trajectories (Poisson regression, shaded ribbon = 95% CI) during the first 15 weeks of the outbreak (exponential growth phase)."}
+set.seed(1)
+
+sim_curve <- simulist::sim_linelist(
+  outbreak_size = c(1000, 1500),
+  config = simulist::create_config(prob_male = 0.2)
+) %>%
+  dplyr::as_tibble() %>%
+  dplyr::mutate(sex = case_when(sex == "f" ~ "Female", sex == "m" ~ "Male"))
+
+out <- sim_curve %>%
+  incidence2::incidence(
+    date_index = "date_onset",
+    interval = "week",
+    groups = "sex",
+  )
+
+dat <- incidence2::keep_first(out, 15L)
+
+# ajustar um modelo de Poisson aos dados agrupados
+fitted <-
+  dat %>%
+  nest(.key = "data") %>%
+  mutate(
+    model = lapply(
+      data,
+      function(x) glm(count ~ date_index, data = x, family = poisson)
+    )
+  )
+
+# Adicionar intervalos de confiança ao resultado
+intervals <-
+  fitted %>%
+  mutate(
+    result = Map(
+      function(data, model) {
+        data %>%
+          ciTools::add_ci(
+            model,
+            alpha = 0.05,
+            names = c("lower_ci", "upper_ci")
+          ) %>%
+          as_tibble()
+      },
+      data,
+      model
+    )
+  ) %>%
+  select(sex, result) %>%
+  unnest(result)
+
+# traçar o gráfico
+plot(out, angle = 45, alpha = 0.3) +
+  ggplot2::geom_ribbon(
+    ggplot2::aes(date_index, ymin = lower_ci, ymax = upper_ci),
+    alpha = 0.5,
+    data = intervals,
+    inherit.aes = FALSE,
+    fill = "#f1de07"
+  ) +
+  ggplot2::geom_line(
+    ggplot2::aes(date_index, y = pred),
+    data = intervals,
+    inherit.aes = FALSE
+  ) +
+  ggplot2::labs(
+    x = "Time (in weeks)",
+    y = "Number of new cases"
+  )
+```
+
+Você pode estimar o pico — o momento com o maior número de casos registrados — usando `incidence2::estimate_peak()`. Você também pode converter a contagem de casos novos ou incidentes para cumulativa usando `incidence2::cumulate()`, se necessário para suas análises posteriores. Encontre exemplos sobre essas funções na [seção da vinheta do incidence2 sobre "Bootstrapping e estimativa de picos"](https://www.reconverse.org/incidence2/vignette.html#sec:bootstrapping-and-estimating-peaks).
+
+
+::: {.callout-warning title="Atenção"}
+
+#### Atraso de notificação
+
+Casos recentes são frequentemente subcontados. Se houver um intervalo de tempo entre a ocorrência de um evento e o seu registro, os períodos de tempo mais recentes parecerão artificialmente baixos simplesmente porque muitos casos ainda não foram registrados. Isso pode dar a impressão de um declínio recente quando, na verdade, trata-se apenas de um atraso de notificação (também conhecido como efeito de [censura à direita](../glossario.qmd#rightcensoring)).
+
+Embora isso não seja um problema para o surto já encerrado mostrado acima, essa é uma consideração fundamental para **surtos em andamento ou em crescimento**, nos quais um declínio aparente recente pode refletir apenas o atraso na notificação, e não uma desaceleração real.
+
+:::
+::: {.callout-note title="No Brasil: dados preliminares e dados finais"}
+
+Para o SINAN, o DATASUS publica duas bases: os **dados preliminares**, passíveis de atualização e
+revisão pelas áreas técnicas responsáveis pela vigilância dos agravos, e os **dados finais**, que
+não são mais atualizados para os anos já disponibilizados. É essa diferença de tempo entre o
+registro e a consolidação que produz o atraso de notificação e a censura à direita nas últimas
+semanas de uma curva epidêmica. Fonte:
+[SINAN — instrucional para download de microdados](http://portalsinan.saude.gov.br/images/documentos/Agravos/microdados/INSTRUCIONAL_PARA_DOWNLOAD_DE_MICRODADOS_DO_SINAN.pdf).
+
+:::
+
+<!--
+
+Possível desafio
+
+Usando a linelist simulada armazenada em `sim_data`, complemente a descrição do surto:
+
+- Calcular o atraso de notificação usando `{cleanepi}`.
+- Traçar um histograma do atraso de notificação usando `{ggplot2}`.
+- Descrever a distribuição do atraso de notificação usando estatísticas descritivas tradicionais.
+
+dica
+
+- O atraso de notificação é o intervalo de tempo entre `date_onset` e `date_reporting`.
+- Use `cleanepi::timespan()` conforme apresentado no episódio **Limpar dados de casos**
+
+-->
+
+::: {.callout-note title="Discussão"}
+
+**Por que usamos curvas epidêmicas?**
+
+De modo geral, para descrever a *magnitude* e a *tendência temporal* do surto, além das diferenças entre *grupos* (por exemplo, demográficos).
+Ela pode fornecer evidências para responder a perguntas como:
+Devemos priorizar intervenções direcionadas em vez de intervenções em massa?
+
+Também pode nos ajudar a determinar o padrão de propagação (como fonte pontual, fonte propagada, entre outros) e investigar um surto com base em parâmetros da doença (como determinar o momento de exposição a partir do período de incubação).
+
+:::
+
+::: {.callout-note .solucao title="Solução" collapse="true"}
+
+### Identificar o tipo de epidemia ou modo de transmissão
+
+Recomendamos a leitura da seção sobre ["Análise de uma curva epidêmica"](https://outbreaktools.ca/background/epidemic-curves/). Ela descreve alguns padrões de propagação que resumimos aqui:
+| Tipo | Descrição | Formato da curva epidêmica | Exemplo |
+|------|-------------|------------------------|---------|
+| Fonte pontual | Exposição única e compartilhada durante um curto período | Aumento rápido → pico → queda rápida (reflete o período de incubação) | Intoxicação alimentar a partir de uma única refeição |
+| Fonte contínua | Exposição prolongada à mesma fonte | Aumento gradual, sem pico claro, duração prolongada | Abastecimento de água contaminada ao longo de vários dias |
+| Fonte propagada | Transmissão pessoa a pessoa | Ondas sucessivas ou múltiplos picos | Sarampo, COVID-19 |
+| Fonte intermitente | Exposição repetida, porém irregular, à mesma fonte | Múltiplos picos em intervalos irregulares e tamanhos variáveis | Restaurante que serve comida contaminada periodicamente |
+
+Você também pode concluir esta [lição rápida (Quick-Learn) sobre "Usar uma curva epidêmica para determinar o modo de propagação"](https://www.cdc.gov/training/quicklearns/epimode/) para treinar como determinar o modo provável de propagação de um surto analisando uma curva epidêmica.
+
+:::
+
+::: {.callout-note .solucao title="Solução" collapse="true"}
+
+### Investigar surtos
+
+A partir de uma epicurva de casos incidentes pela data de início dos sintomas, podemos determinar:
+
+- O período de incubação, se o momento da exposição for conhecido; ou
+- O momento da exposição, se o período de incubação for conhecido.
+
+O *período de incubação* é definido como o tempo médio desde a infecção até os primeiros sintomas clínicos ([Figura 2 em On Kwok et al.](https://www.sciencedirect.com/science/article/pii/S2001037018301703#f0010)). Isso varia de indivíduo para indivíduo para a mesma doença. 
+
+Por exemplo, o sarampo tem um período de incubação com variação de 7 a 20 dias (mínimo/máximo) e mediana de 12,5 dias.
+
+```{r, echo = FALSE}
+epiparameter::epiparameter_db(
+  disease = "measles",
+  epi_name = "incubation period",
+  single_epiparameter = TRUE
+) %>%
+  plot()
+```
+
+Conhecer o período de incubação do patógeno nos permite estimar quando a exposição ocorreu, fazendo a contagem regressiva a partir do início dos sintomas na curva epidêmica:
+
+- O início da exposição pode ser estimado subtraindo o período de incubação *mínimo* da data do primeiro caso.
+- O fim da exposição pode ser estimado subtraindo o período de incubação *máximo* da data do último caso.
+
+```{r, echo = FALSE}
+# Simular dados de curva epidêmica (fonte pontual)
+set.seed(42)
+exposure_start <- 0
+exposure_end <- 2
+
+min_incubation <- 3
+max_incubation <- 7
+
+# Casos aparecem entre
+# exposure_start + min_incubation e exposure_end + max_incubation
+first_case <- exposure_start + min_incubation # dia 3
+last_case <- exposure_end + max_incubation # dia 9
+
+cases <- data.frame(
+  day = c(3, 4, 5, 6, 7, 8, 9),
+  count = c(1, 3, 6, 5, 3, 2, 1)
+)
+
+ggplot(cases, aes(x = day, y = count)) +
+  geom_bar(
+    stat = "identity",
+    fill = "steelblue",
+    color = "white",
+    width = 0.8
+  ) +
+
+  # Janela de exposição
+  annotate(
+    "rect",
+    xmin = exposure_start,
+    xmax = exposure_end,
+    ymin = 0,
+    ymax = Inf,
+    alpha = 0.15,
+    fill = "red"
+  ) +
+  annotate(
+    "text",
+    x = (exposure_start + exposure_end) / 2,
+    y = 4.8,
+    label = "Exposure\nWindow",
+    color = "red",
+    size = 3.5,
+    fontface = "bold"
+  ) +
+
+  # Linha e rótulo do primeiro caso
+  geom_vline(
+    xintercept = first_case,
+    linetype = "dashed",
+    color = "darkgreen",
+    linewidth = 0.8
+  ) +
+  annotate(
+    "text",
+    x = first_case + 0.15,
+    y = 5.5,
+    label = "First case",
+    color = "darkgreen",
+    size = 3.2,
+    hjust = 0
+  ) +
+
+  # Linha e rótulo do último caso
+  geom_vline(
+    xintercept = last_case,
+    linetype = "dashed",
+    color = "purple",
+    linewidth = 0.8
+  ) +
+  annotate(
+    "text",
+    x = last_case - 0.15,
+    y = 5.5,
+    label = "Last case",
+    color = "purple",
+    size = 3.2,
+    hjust = 1
+  ) +
+
+  # Intervalo de incubação mínima (acima das barras)
+  annotate(
+    "segment",
+    x = exposure_start,
+    xend = first_case,
+    y = 6.8,
+    yend = 6.8,
+    color = "darkgreen",
+    arrow = arrow(ends = "both", length = unit(0.2, "cm"))
+  ) +
+  annotate(
+    "text",
+    x = (exposure_start + first_case) / 2,
+    y = 7.1,
+    label = "Min incubation period",
+    color = "darkgreen",
+    size = 3
+  ) +
+
+  # Intervalo de incubação máxima (acima das barras)
+  annotate(
+    "segment",
+    x = exposure_end,
+    xend = last_case,
+    y = 7.5,
+    yend = 7.5,
+    color = "purple",
+    arrow = arrow(ends = "both", length = unit(0.2, "cm"))
+  ) +
+  annotate(
+    "text",
+    x = (exposure_end + last_case) / 2,
+    y = 7.8,
+    label = "Max incubation period",
+    color = "purple",
+    size = 3
+  ) +
+
+  scale_x_continuous(breaks = 0:10, name = "Day") +
+  scale_y_continuous(
+    name = "Number of Cases",
+    limits = c(0, 8.2),
+    breaks = scales::breaks_pretty()
+  ) +
+  labs(
+    title = "Epidemic Curve: Estimating Exposure from Incubation Period",
+    subtitle =
+      "Working backwards from first and last cases to find the exposure window"
+  ) +
+  theme_classic() +
+  theme(
+    plot.title = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "gray40"),
+    axis.title = element_text(size = 11)
+  )
+```
+
+:::
+
+::: {.callout-note title="Checklist"}
+
+Um surto pode ser descrito usando:
+
+- Gráficos de incidência ou curvas epidêmicas a partir de linelist (usando `{incidence2}`)
+- Redes de contato a partir de dados de contatos (usando `{epicontacts}`)
+- Atrasos entre eventos com data a partir de linelist (usando `{cleanepi}` ou `{tidyverse}`)
+
+No próximo conjunto de tutoriais, aprenderemos a subsidiar a avaliação de um surto com base em parâmetros estimados de transmissão (taxa de crescimento e número de reprodução) e gravidade (risco de letalidade) usando modelos mais abrangentes e distribuições estatísticas.
+
+Para relembrar conceitos sobre atrasos e distribuições de probabilidade, você pode revisar conceitos introdutórios em [alguns episódios que apresentam atrasos para dados de surto](https://epiverse-trace.github.io/tutorials/).
+
+:::
+
+::: {.callout-tip .desafio title="Desafio"}
+
+Qual combinação de unidade de tempo, categorias de casos e argumentos em `plot()` melhor captura o padrão de surto de `sim_data` e por quê?
+
+Escreva algumas frases descrevendo seus aprendizados.
+
+:::
+
+Por fim, o `{incidence2}` produz gráficos básicos para epicurvas, mas é necessário trabalho adicional para criar gráficos bem anotados.
+No entanto, usando o pacote `{ggplot2}`, você pode gerar epicurvas mais sofisticadas, com maior flexibilidade de anotação.
+Encontre alternativas sobre como aprimorar suas epicurvas nos detalhes abaixo:
+
+::: {.callout-note title="Detalhes" collapse="true"}
+
+#### Visualização com ggplot2
+
+Vamos focar em três elementos-chave para a produção de epicurvas: gráficos de histograma, escala dos eixos de datas e seus rótulos, e anotação geral de tema do gráfico.
+O exemplo abaixo demonstra como configurar esses três elementos para um objeto simples de `{incidence2}`.
+
+```{r}
+# Definir intervalos de datas para o eixo x
+breaks <- seq.Date(
+  from = min(as.Date(daily_incidence$date_index, na.rm = TRUE)),
+  to = max(as.Date(daily_incidence$date_index, na.rm = TRUE)),
+  by = 20 # a cada 20 dias
+)
+
+# Criar o gráfico
+ggplot2::ggplot(data = daily_incidence) +
+  geom_histogram(
+    mapping = aes(
+      x = as.Date(date_index),
+      y = count
+    ),
+    stat = "identity",
+    color = "blue", # cor da borda da barra
+    fill = "lightblue", # cor de preenchimento da barra
+    width = 1 # largura da barra
+  ) +
+  theme_minimal() + # aplicar um tema minimalista para um visual limpo
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5), # título centralizado + negrito
+    plot.subtitle = element_text(hjust = 0.5), # centralizar subtítulo
+    plot.caption = element_text(face = "italic", hjust = 0), # legenda da figura em itálico
+    axis.title = element_text(face = "bold"), # títulos dos eixos em negrito
+    axis.text.x = element_text(angle = 45, vjust = 0.5) # texto do eixo x rotacionado
+  ) +
+  labs(
+    x = "Date", # rótulo do eixo x
+    y = "Number of new cases", # rótulo do eixo y
+    title = "Daily Outbreak Cases", # título do gráfico
+    subtitle = "Epidemiological Data for the Outbreak", # subtítulo do gráfico
+    caption = "Data Source: Simulated Data" # legenda/fonte do gráfico
+  ) +
+  scale_x_date(
+    breaks = breaks, # definir quebras personalizadas no eixo x
+    labels = scales::label_date_short() # rótulos de data abreviados
+  )
+```
+
+Use a opção `group` na função de mapeamento estético para visualizar uma epicurva com diferentes grupos.
+Se houver mais de um fator de agrupamento, use a opção `facet_wrap()`, conforme demonstrado no exemplo abaixo:
+
+```{r}
+# Criar um objeto de incidência diária agrupado por sexo
+daily_incidence_2 <- incidence2::incidence(
+  sim_data,
+  date_index = "date_onset",
+  groups = "sex",
+  interval = "day", # Agregar por intervalos diários
+  complete_dates = TRUE # Preencher datas ausentes
+)
+```
+
+```{r}
+# Fazer o gráfico da incidência diária em facetas por sexo
+ggplot2::ggplot(data = daily_incidence_2) +
+  geom_histogram(
+    mapping = aes(
+      x = as.Date(date_index),
+      y = count,
+      group = sex,
+      fill = sex
+    ),
+    stat = "identity"
+  ) +
+  theme_minimal() + # aplicar tema minimalista
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5), # título em negrito + centralizado
+    plot.subtitle = element_text(hjust = 0.5), # centralizar o subtítulo
+    plot.caption = element_text(face = "italic", hjust = 0), # legenda em itálico
+    axis.title = element_text(face = "bold"), # rótulos dos eixos em negrito
+    axis.text.x = element_text(angle = 45, vjust = 0.5) # rotacionar texto do eixo x
+  ) +
+  labs(
+    x = "Date", # rótulo do eixo x
+    y = "Number of cases", # rótulo do eixo y
+    title = "Daily Outbreak Cases by Sex", # título do gráfico
+    subtitle = "Incidence of Cases Grouped by Sex", # subtítulo do gráfico
+    caption = "Data Source: Simulated Data" # legenda para contexto adicional
+  ) +
+  facet_wrap(~sex) + # criar painéis separados por sexo
+  scale_x_date(
+    breaks = breaks, # definir quebras de data personalizadas
+    labels = scales::label_date_short() # formato de data abreviado para os rótulos do eixo x
+  ) +
+  scale_fill_manual(values = c("lightblue", "lightpink")) # cores de preenchimento personalizadas
+```
+
+:::
+
+::: {.callout-note title="Pontos-chave"}
+
+- Use o pacote `{simulist}` para gerar dados sintéticos de surto.
+- Use o pacote `{incidence2}` para agregar dados de casos com base em um evento com data e em outras variáveis para produzir curvas epidêmicas.
+- Use o pacote `{ggplot2}` para produzir epicurvas com melhores anotações.
+
+:::

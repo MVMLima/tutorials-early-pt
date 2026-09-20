@@ -1,0 +1,34 @@
+name: Render e publicar o site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: 1.8.27
+
+      # O site é renderizado a partir do cache em `_freeze/` (commitado no repositório),
+      # por isso o build não precisa do R nem dos pacotes do Epiverse no CI.
+      # Se algum .qmd for alterado, re-renderize localmente e commite o _freeze/ atualizado.
+      - name: Renderizar o site
+        run: quarto render
+
+      - name: Publicar no GitHub Pages (branch gh-pages)
+        uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

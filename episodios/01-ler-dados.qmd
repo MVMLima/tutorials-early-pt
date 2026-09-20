@@ -1,0 +1,568 @@
+---
+title: 'Ler dados de casos'
+---
+
+::: {.callout-note title="Perguntas"}
+
+- Onde você costuma armazenar dados de surto?
+- Quais formatos de dados você costuma usar para análise? 
+- Você pode importar dados diretamente de servidores e sistemas de informação em saúde? 
+:::
+
+::: {.callout-tip title="Objetivos"}
+
+- Identificar fontes comuns de dados de surto. 
+- Importar dados de surto de múltiplos formatos para o ambiente do `R`.
+- Acessar e extrair dados de servidores remotos e sistemas de informação em saúde usando APIs.
+:::
+
+::: {.callout-important title="Pré-requisitos"}
+
+## Pré-requisitos
+
+Este episódio requer que você esteja familiarizado com **Ciência de dados**: [Tarefas básicas com R](https://www.epirhandbook.com/en/new_pages/basics.html).
+
+
+:::
+
+## Introdução
+
+O primeiro passo na análise de surtos é importar seu conjunto de dados para o ambiente do `R`. Os dados podem vir de fontes locais, como arquivos no seu computador, ou de fontes externas, como bancos de dados e sistemas de informação em saúde (SIS/HIS). 
+
+Os dados de surto assumem várias formas. Podem estar armazenados como arquivos simples (flat files) em vários formatos, abrigados em sistemas de gerenciamento de banco de dados relacional (RDBMS) ou gerenciados por SIS especializados, como o [SORMAS](https://sormas.org/) e o [DHIS2](https://dhis2.org/). Esses SIS oferecem interfaces de programação de aplicações (APIs) que permitem a usuários autorizados modificar e extrair registros de dados com eficiência, tornando-os particularmente valiosos para a coleta e o armazenamento institucional de dados de saúde em larga escala.
+
+::: {.callout-note title="No Brasil: onde ficam os dados de casos"}
+
+No Brasil, os dados de casos dos agravos de notificação compulsória são consolidados no **SINAN**
+e publicados de forma aberta e anonimizada pelo DATASUS, na plataforma de dados abertos e na área
+de *Transferência/Download de Arquivos*. Os arquivos são distribuídos por agravo, ano e unidade
+federativa, no formato **DBC** (DBF compactado).
+
+Para ler esses arquivos direto no R existe o pacote
+[`{microdatasus}`](https://cran.r-project.org/package=microdatasus), que baixa, lê e pré-processa
+os microdados do DATASUS, com funções específicas para SINAN, SIM, SINASC, SIH, SIA e CNES.
+Fonte: [Ministério da Saúde — dados sobre agravos de notificação](https://www.gov.br/saude/pt-br/acesso-a-informacao/sic/dados-em-transparencia-ativa/svsa/agravos-de-notificacoes/agravos-de-notificacoes).
+
+Ao ler arquivos exportados de sistemas de vigilância, confira sempre o **separador** e a
+**codificação** antes de importar: eles variam entre sistemas e entre versões.
+
+:::
+
+Este episódio demonstra como ler dados de casos de cada uma dessas fontes. Vamos começar carregando os pacotes necessários. Usaremos o `{rio}` para ler dados armazenados em arquivos e o `{readepi}` para acessar dados de RDBMS e SIS. Também carregaremos o `{here}` para localizar caminhos de arquivos dentro do diretório do seu projeto e o `{tidyverse}`, que inclui o `{magrittr}` (que fornece o operador pipe `%>%`) e o `{dplyr}` (para manipulação de dados). O operador pipe nos permite encadear funções de forma direta.
+
+```{r,eval=TRUE,message=FALSE}
+# Carregar pacotes
+library(tidyverse) # para funções do {dplyr} e o pipe %>%
+library(rio) # para importar dados de arquivos
+library(here) # para referenciar arquivos com facilidade
+library(readepi) # para importar dados diretamente de RDBMS ou SIS
+library(dbplyr) # para backend de banco de dados para o {dplyr}
+```
+
+::: {.callout-note title="Checklist"}
+
+### O operador dois-pontos duplo (`::`)
+
+Os dois-pontos duplos `::` no `R` permitem chamar uma função específica de um pacote sem carregar o pacote inteiro. Por exemplo, `dplyr::filter(data, condition)` usa a função `filter()` do pacote `{dplyr}`, sem exigir `library(dplyr)`.
+
+Essa notação serve a dois propósitos: torna o código mais legível ao mostrar explicitamente de qual pacote cada função se origina e evita conflitos de espaço de nomes (namespace) que ocorrem quando múltiplos pacotes contêm funções com o mesmo nome.
+
+:::
+
+
+::: {.callout-important title="Pré-requisitos"}
+
+### Configurar um projeto e uma pasta
+
+- Crie um projeto do Positron (ou RStudio, se preferir). Se necessário, siga este [guia sobre "Hello RStudio Projects"](https://docs.posit.co/ide/user/ide/get-started/#hello-rstudio-projects) para criar um.
+- Dentro do projeto do Positron, crie uma pasta `data/`.
+- Baixe os arquivos CSV [ebola_cases_2.csv](../data/ebola_cases_2.csv) e [marburg.zip](../data/Marburg.zip) e salve-os dentro da pasta `data/`.
+
+:::
+
+## Ler dados de arquivos 
+
+Diversos pacotes estão disponíveis para importar dados de surto armazenados em arquivos individuais para o `R`. Entre eles estão o [{rio}](https://gesistsa.github.io/rio/), o [{readr}](https://readr.tidyverse.org/) do `{tidyverse}`, o [{io}](https://bitbucket.org/djhshih/io/src/master/), o [{ImportExport}](https://cran.r-project.org/web/packages/ImportExport/index.html) e o [{data.table}](https://rdatatable.gitlab.io/data.table/). Juntos, esses pacotes oferecem métodos para ler um ou vários arquivos em uma ampla variedade de formatos.
+
+O exemplo abaixo mostra como importar um arquivo `csv` para o ambiente do `R` usando o pacote `{rio}`. Usamos o pacote `{here}` para instruir o R a procurar o arquivo na pasta `data/` do seu projeto, e `dplyr::as_tibble()` para converter em um formato tidy (organizado) para análises posteriores no R.
+
+```{r eval=FALSE, echo=TRUE}
+# ler dados
+# por exemplo, se o caminho para o nosso arquivo for "data/raw-data/ebola_cases_2.csv", então:
+ebola_confirmed <- rio::import(
+  here::here("data", "raw-data", "ebola_cases_2.csv")
+) %>%
+  dplyr::as_tibble() # para a saída como um data frame simples
+
+# pré-visualizar dados
+ebola_confirmed
+```
+
+```{r eval=TRUE, echo=FALSE, message=FALSE}
+# ler dados
+ebola_confirmed <- rio::import(
+  file.path("data", "ebola_cases_2.csv")
+) %>%
+  dplyr::as_tibble() # para a saída como um data frame simples
+
+# pré-visualizar dados
+ebola_confirmed
+```
+
+```{r eval=FALSE, echo=FALSE}
+# para o positron
+ebola_confirmed <- rio::import(
+  here::here("episodes", "data", "ebola_cases_2.csv")
+) %>%
+  dplyr::as_tibble() # para a saída como um data frame simples
+
+# pré-visualizar dados
+ebola_confirmed
+```
+
+
+Você pode usar a mesma abordagem para importar outros formatos de arquivo, como `tsv`, `xlsx` e outros.
+
+::: {.callout-note title="Checklist"}
+
+### Por que devemos usar o pacote {here}?
+
+O pacote `{here}` foi projetado para simplificar a referência a arquivos em projetos do R, fornecendo uma maneira confiável de construir caminhos de arquivos relativos à raiz do projeto. A principal razão para usá-lo é a **compatibilidade entre ambientes**.
+
+Ele funciona em diferentes sistemas operacionais (Windows, Mac, Linux) sem a necessidade de ajustar os caminhos dos arquivos. 
+
+- No Windows, os caminhos são escritos usando barras invertidas ( `\` ) como separador entre os nomes das pastas: `"data\raw-data\file.csv"` .
+- Em sistemas operacionais baseados em Unix, como macOS ou Linux, a barra inclinada ( `/` ) é usada como separador de caminho: `"data/raw-data/file.csv"`.
+
+O pacote `{here}` reforça a reprodutibilidade do seu trabalho em múltiplos sistemas operacionais. Se você tem interesse em reprodutibilidade, convidamos você a ler este tutorial para aumentar a [abertura, sustentabilidade e reprodutibilidade da sua análise de epidemias com o R](https://epiverse-trace.github.io/research-compendium/)
+
+:::
+
+::: {.callout-tip .desafio title="Desafio"}
+
+### Ler dados compactados 
+
+Você consegue ler dados de um arquivo compactado no `R`?
+
+Baixe este [arquivo zip](../data/Marburg.zip) contendo dados de surto de Marburg e, em seguida, importe-o para o seu ambiente do `R`.
+
+::: {.callout-note title="Dica" collapse="true"}
+
+Você pode consultar a [lista completa de formatos de arquivo suportados](https://gesistsa.github.io/rio/#supported-file-formats) 
+no pacote `{rio}` no site do pacote. Para ver a lista de formatos suportados no `{rio}`, execute:
+
+
+```{r eval=FALSE}
+rio::install_formats()
+```
+
+:::
+
+::: {.callout-note .solucao title="Solução" collapse="true"}
+
+```{r eval=FALSE}
+rio::import(here::here("data", "Marburg.zip"))
+```
+:::
+
+:::
+
+
+## Ler dados de bancos de dados
+
+O pacote `{readepi}` contém funções que permitem importar dados diretamente de RDBMS.
+A função `readepi::read_rdbms()` suporta a importação de dados de servidores como Microsoft SQL, MySQL, PostgreSQL e SQLite. Ela é construída sobre o pacote [{DBI}](https://dbi.r-dbi.org/), que fornece uma interface geral para interagir com RDBMS.
+
+::: {.callout-note title="Discussão"}
+
+### Vantagens de ler dados diretamente de um banco de dados?
+
+Importar dados diretamente de um banco de dados otimiza o uso da memória na sessão do R. Ao processar o banco de dados com "consultas" (por exemplo, SELECT, FILTER, GROUP BY) antes da extração, você reduz a carga de memória na sua sessão do Positron. Em contrapartida, carregar um conjunto de dados inteiro no R para manipulação pode consumir mais RAM do que sua máquina local consegue suportar, podendo fazer com que o Positron fique lento ou trave.
+
+Os RDBMS também permitem que múltiplos usuários acessem, armazenem e analisem partes do conjunto de dados simultaneamente, sem a necessidade de transferir arquivos individuais. Isso elimina os problemas de controle de versão que surgem quando várias cópias de arquivos circulam entre os usuários.
+
+:::
+
+### 1. Conectar a um banco de dados
+
+Você pode usar a função `readepi::login()` para estabelecer uma conexão com o banco de dados, como mostrado abaixo:
+
+```{r}
+# estabelecer a conexão com um banco de dados MySQL de teste
+rdbms_login <- readepi::login(
+  from = "genome-mysql.soe.ucsc.edu",
+  type = "MySQL",
+  user_name = "genome",
+  password = "",
+  driver_name = "",
+  db_name = "hgFixed",
+  port = 3306
+)
+
+rdbms_login
+```
+
+Os parâmetros da função são:
+
+- `from`: O endereço do servidor de banco de dados (`genome-mysql.soe.ucsc.edu`)
+- `type`: O tipo de sistema de banco de dados ("MySQL")
+- `user_name`: O nome de usuário para autenticação ("genome")
+- `password`: A senha (string vazia "" indica que nenhuma senha é exigida para este banco de dados de teste público)
+- `driver_name`: O driver do banco de dados (string vazia usa o driver padrão)
+- `db_name`: O banco de dados específico ao qual se conectar ("hgFixed")
+- `port`: O número da porta para a conexão (3306)
+
+A função retorna um objeto de conexão armazenado na variável `rdbms_login`, que pode ser usado para consultar e extrair dados do banco de dados.
+
+::: {.callout-note}
+
+Nota: Este exemplo usa um banco de dados público de teste do projeto UCSC Genome Browser (Universidade da Califórnia em Santa Cruz), razão pela qual nenhuma senha é necessária. Ele usa a porta padrão do MySQL (3306), portanto tem menor probabilidade de ser bloqueado do que servidores de teste em portas não padronizadas, mas o acesso ainda pode ser limitado por restrições rigorosas de redes corporativas ou institucionais.
+
+:::
+
+### 2. Acessar a lista de tabelas do banco de dados
+
+A função `readepi::show_tables()` recupera a lista completa dos nomes das tabelas de um banco de dados:
+
+```{r}
+# obter os nomes das tabelas
+tables <- readepi::show_tables(login = rdbms_login)
+
+tables[1:5]
+```
+
+Em um banco de dados relacional, você normalmente tem várias tabelas. Cada tabela representa uma entidade específica (por exemplo, pacientes, unidades de internação, tratamentos). As tabelas são vinculadas por meio de identificadores comuns chamados chaves primárias ou chaves estrangeiras.
+
+### 3. Ler dados de uma tabela em um banco de dados
+
+Você pode ler os dados da tabela `author` usando `dplyr::tbl()`. Esta tabela lista
+autores de submissões de sequências do GenBank, com cada `name` armazenado como `"LastName,F.I."`.
+
+```{r, warning=FALSE}
+# importar dados da tabela 'author' usando uma consulta SQL
+dat <- rdbms_login %>%
+  dplyr::tbl(from = "author") %>%
+  dplyr::filter(stringr::str_sub(string = name, start = 1, end = 1) == "A") %>%
+  dplyr::slice_sample(n = 20) %>% 
+  dplyr::arrange(desc(id))
+
+dat
+```
+
+Quando você aplica verbos do `{dplyr}` a essa tabela de banco de dados, eles são traduzidos automaticamente para consultas SQL:
+
+```{r}
+# mostrar as consultas SQL traduzidas
+dat %>%
+  dplyr::show_query()
+```
+
+Como alternativa, você pode usar a função `readepi::read_rdbms()` para importar dados de uma tabela de banco de dados. Ela aceita uma consulta SQL ou uma lista de parâmetros de consulta.
+
+### 4. Extrair dados do banco de dados
+
+Use `dplyr::collect()` para forçar a execução de uma consulta ao banco de dados e extrair o resultado para o seu computador local.
+
+```{r, warning=FALSE}
+# puxar todos os dados para um tibble local
+dat %>%
+  dplyr::collect()
+```
+
+Idealmente, após especificar um conjunto de consultas, você pode reduzir o tamanho do conjunto de dados de entrada para uso no ambiente da sua sessão do R.
+
+::: {.callout-tip .desafio title="Desafio"}
+
+### Executar consultas SQL no R usando o {dbplyr}
+
+Crie uma tabela contendo:
+
+- a coluna `name` da tabela `author`,
+- a coluna `acc` da tabela `gbCdnaInfo`, e
+- usando o `id` do autor como chave primária ou identificador comum.
+
+Seguindo estes passos:
+
+- Use os verbos do `{dplyr}` para selecionar colunas e juntar tabelas,
+- Imprima as consultas SQL do banco de dados relacional, e
+- Puxe os dados para a sua sessão local.
+
+::: {.callout-note title="Dica" collapse="true"}
+
+Juntar colunas de duas tabelas diferentes:
+
+- Da tabela `author`, selecione `id` e `name`, mantendo apenas algumas linhas
+  (por exemplo, autores cujo sobrenome começa com `"A"`) — `gbCdnaInfo` abrange todas as
+  submissões já feitas ao GenBank, portanto filtrar `author` previamente mantém a junção rápida.
+- Da tabela `gbCdnaInfo`, selecione `author` (a chave estrangeira para `author$id`) e `acc`.
+- Junte a tabela `gbCdnaInfo` à tabela `author` usando `dplyr::left_join()`, correspondendo
+  `author$id` a `gbCdnaInfo$author` — observe que as colunas de junção têm **nomes diferentes**, então
+  você precisará de `by = c("id" = "author")` em vez de depender de um nome de coluna compartilhado.
+- Imprima a consulta SQL usando `dplyr::show_query()`
+- Colete a saída da junção usando `dplyr::collect()`
+
+:::
+
+::: {.callout-note .solucao title="Solução" collapse="true"}
+
+```{r, warning=FALSE}
+# SELECIONAR ALGUMAS COLUNAS DE UMA TABELA E FAZER LEFT JOIN COM OUTRA TABELA
+author <- rdbms_login %>%
+  dplyr::tbl(from = "author") %>%
+  dplyr::filter(stringr::str_sub(string = name, start = 1, end = 1) == "A") %>%
+  dplyr::slice_sample(n = 5) %>%
+  dplyr::select(id, name)
+
+gb_cdna_info <- rdbms_login %>%
+  dplyr::tbl(from = "gbCdnaInfo") %>%
+  dplyr::select(author, acc)
+
+dplyr::left_join(
+  x = author,
+  y = gb_cdna_info,
+  by = c("id" = "author"),
+  keep = TRUE
+) %>%
+  dplyr::show_query()
+
+dplyr::left_join(
+  x = author,
+  y = gb_cdna_info,
+  by = c("id" = "author"),
+  keep = TRUE
+) %>%
+  dplyr::collect()
+```
+
+Você também pode consultar o pacote do R `{dbplyr}`. Mas para um tutorial passo a passo sobre SQL, recomendamos este [tutorial sobre gerenciamento de dados com SQL para ecologistas](https://datacarpentry.org/sql-ecology-lesson/).
+
+:::
+
+:::
+
+Você pode fechar a conexão com o banco de dados com:
+
+```{r}
+pool::poolClose(rdbms_login)
+```
+
+::: {.callout-note title="Detalhes" collapse="true"}
+
+Você pode confirmar que a conexão foi fechada executando os objetos criados no console:
+
+```{r}
+rdbms_login
+
+dat
+```
+
+:::
+
+## Ler dados de APIs de SIS
+
+Os dados de saúde são cada vez mais armazenados em sistemas de informação em saúde (SIS/HIS) especializados, como **Fingertips**, **GoData**, **REDCap**, **DHIS2**, **SORMAS**, etc. A versão atual do pacote `{readepi}` permite importar dados do **DHIS2** e do **SORMAS**. As subseções abaixo demonstram como importar dados desses dois sistemas.
+
+### Importar dados do DHIS2
+
+O [DHIS2](https://dhis2.org/about/) (District Health Information System 2) é um software de código aberto que revolucionou a gestão global de informações de saúde. A função `readepi::read_dhis2()` importa dados do sistema [Tracker](https://dhis2.org/tracker-in-action/) do DHIS2 por meio de sua API.
+
+Para importar dados do DHIS2 com sucesso, você precisa:
+
+1. Conectar-se ao sistema usando a função `readepi::login()`
+2. Fornecer o nome ou ID do programa e da unidade organizacional de interesse
+
+Você pode recuperar os IDs e nomes dos programas e unidades organizacionais disponíveis usando as funções `get_programs()` e `get_organisation_units()`, respectivamente.
+
+```{r, message=FALSE}
+# estabelecer a conexão com o sistema
+dhis2_login <- readepi::login(
+  type = "dhis2",
+  from = "https://play.im.dhis2.org/stable-2-42-5-1",
+  user_name = "admin",
+  password = "district"
+)
+
+dhis2_login
+```
+
+Se o passo acima falhar, verifique outras opções disponíveis na lista de [Instâncias de Demonstração do DHIS2](https://im.dhis2.org/public/instances), todas acessíveis com o nome de usuário `"admin"` e senha `"district"`. Basta substituir `stable-2-42-5-1` na URL. A única condição é que ela deve ser de versão igual ou inferior a `2.42`.
+
+::: {.callout-warning title="Atenção"}
+
+Evite publicar seu NOME DE USUÁRIO e SENHA. Você pode usar o `{rstudioapi}`:
+
+```{r, eval = FALSE}
+dhis2_login <- readepi::login(
+  type = "dhis2",
+  from = "https://play.im.dhis2.org/stable-2-42-5-1",
+  user_name = rstudioapi::askForPassword("Database username"),
+  password = rstudioapi::askForPassword("Database password")
+)
+```
+
+Você pode ler mais nesta postagem de blog sobre [Como evitar a publicação de credenciais no seu código](https://rviews.rstudio.com/2019/03/21/how-to-avoid-publishing-credentials-in-your-code/)
+:::
+
+```{r}
+# obter os nomes e IDs dos programas
+programs <- readepi::get_programs(login = dhis2_login)
+
+# imprimir tabelas
+tibble::as_tibble(programs)
+```
+
+```{r}
+# obter os nomes e IDs das unidades organizacionais
+org_units <- readepi::get_organisation_units(login = dhis2_login)
+
+# imprimir tabelas
+tibble::as_tibble(org_units)
+```
+
+Após recuperar as unidades organizacionais e os nomes dos programas do banco de dados do DHIS2, você pode importar dados usando os nomes ou os IDs codificados, como demonstrado nos blocos de código abaixo:
+
+```{r,message=FALSE}
+# importar dados do DHIS2 usando nomes
+data_name <- readepi::read_dhis2(
+  login = dhis2_login,
+  org_unit = "Bucksal Clinic",
+  program = "Child Programme"
+)
+
+tibble::as_tibble(data_name)
+```
+
+```{r,eval=TRUE,message=FALSE}
+# importar dados do DHIS2 usando IDs
+data_id <- readepi::read_dhis2(
+  login = dhis2_login,
+  org_unit = "vRC0stJ5y9Q",
+  program = "IpHINAT79UW"
+)
+
+identical(data_id, data_name)
+```
+
+Observe que nem todas as unidades organizacionais estão cadastradas para um programa específico. Para descobrir quais unidades organizacionais executam um determinado programa, use a função `get_program_org_units()`, como mostrado abaixo:
+
+```{r}
+# obter a lista de unidades organizacionais que executam o programa "IpHINAT79UW"
+target_org_units <- readepi::get_program_org_units(
+  login = dhis2_login,
+  program = "IpHINAT79UW",
+  org_units = org_units
+)
+
+tibble::as_tibble(target_org_units)
+```
+
+<!-- :::::::::::::::: callout
+
+Nota: Este exemplo usa um sistema de demonstração fornecido pela organização do DHIS2 [organization](https://test.e2e.dhis2.org/) para fins de teste e desenvolvimento. Na prática, você deve personalizar os parâmetros para sua própria instância do DHIS2. 
+
+:::::::::::::::: -->
+
+::: {.callout-tip .desafio title="Desafio"}
+
+### Ler dados de um servidor DHIS2
+Teste o `{readepi}` acessando um servidor DHIS2 com suas credenciais.
+Faça o seguinte:
+
+- Conecte-se a um servidor diferente,
+- Liste todos os programas e unidades organizacionais disponíveis, 
+- Leia dados de um desses programas,
+- Opcional: Reproduza uma figura descritiva.
+
+::: {.callout-note title="Dica" collapse="true"}
+
+Tente usar `rstudioapi::askForPassword()` para `user_name` e `password`.
+
+Se você encontrar erros, por favor abra uma issue no [repositório do GitHub do `readepi`](https://github.com/epiverse-trace/readepi/issues/).
+:::
+
+:::
+
+
+### Importar dados do SORMAS
+
+O [SORMAS](https://sormas.org/) (Surveillance Outbreak Response Management and Analysis System) é um sistema de saúde digital (e-health) de código aberto que otimiza os processos de vigilância de doenças infecciosas e resposta a surtos. A função `readepi::read_sormas()` permite importar dados do SORMAS por meio de sua API.
+
+Na versão atual do pacote `{readepi}`, a função `read_sormas()` retorna dados para as seguintes colunas: **case_id, person_id, sex, date_of_birth, case_origin, country, city, lat, long, case_status, date_onset, date_admission, date_last_contact, date_first_contact, outcome, date_outcome** e **Ct_values**.
+
+O bloco de código abaixo demonstra como importar dados de um sistema de demonstração do SORMAS:
+
+```{r,message=FALSE}
+# CONECTAR AO SISTEMA SORMAS
+sormas_login <- readepi::login(
+  type = "sormas",
+  from = "https://demo.sormas.org/sormas-rest",
+  user_name = "SurvSup",
+  password = "Lk5R7JXeZSEc"
+)
+
+# EXTRAIR TODOS OS CASOS DE COVID (Coronavírus) DA INSTÂNCIA DE TESTE DO SORMAS
+covid_cases <- readepi::read_sormas(
+  login = sormas_login,
+  disease = "coronavirus",
+)
+tibble::as_tibble(covid_cases)
+```
+
+Um parâmetro fundamental é o nome da doença. Para garantir a sintaxe correta, você pode recuperar a lista de nomes de doenças disponíveis usando a função `sormas_get_diseases()`.
+
+```{r,eval=TRUE,message=FALSE}
+# obter a lista de todos os nomes de doenças
+disease_names <- readepi::sormas_get_diseases(
+  login = sormas_login
+)
+
+tibble::as_tibble(disease_names)
+```
+
+
+::: {.callout-tip .desafio title="Desafio"}
+### Ler dados de um servidor de demonstração do SORMAS
+A organização SORMAS também fornece servidores de demonstração para desenvolvimento e testes. Um deles
+é chamado **clinical surveillance**, disponível no link
+("https://demo.sormas.org/sormas-rest") e acessível com o nome de usuário "CaseSup" e senha "SJgFKffPDmr7". Conecte-se a esse servidor, liste todas as doenças disponíveis e importe os casos relacionados à varíola dos macacos (mpox).
+
+::: {.callout-note .solucao title="Solução" collapse="true"}
+
+```{r, message=FALSE}
+# estabelecer a conexão com o sistema
+sormas_demo <- readepi::login(
+  type = "sormas",
+  from = "https://demo.sormas.org/sormas-rest",
+  user_name = "CaseSup",
+  password = "SJgFKffPDmr7"
+)
+
+# Listar os nomes de todas as doenças
+demo_diseases <- readepi::sormas_get_diseases(login = sormas_demo)
+tibble::as_tibble(demo_diseases)
+
+```
+
+```{r,eval=TRUE,message=FALSE}
+# obter a lista de todos os nomes de doenças
+mpox_cases <- readepi::read_sormas(
+  login = sormas_demo,
+  disease = "monkeypox",
+)
+tibble::as_tibble(mpox_cases)
+```
+
+:::
+
+:::
+
+
+::: {.callout-note title="Pontos-chave"}
+
+- Use `{rio}`, `{io}`, `{readr}` ou `{ImportExport}` para ler dados de arquivos individuais.
+- Use `{readepi}` para ler dados de RDBMS e SIS.
+- O pacote `{rio}` suporta uma ampla variedade de formatos de arquivo, incluindo `CSV`, `TSV`, `XLSX` e arquivos compactados.
+- Use `readepi::login()` para estabelecer conexões com sistemas RDBMS, DHIS2 ou SORMAS.
+- O pacote `{readepi}` atualmente suporta a importação de dados dos sistemas de informação em saúde DHIS2 e SORMAS.
+
+:::

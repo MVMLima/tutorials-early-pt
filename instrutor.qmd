@@ -1,0 +1,133 @@
+---
+title: "Notas para quem conduz a oficina"
+---
+
+Este guia é para quem vai **ministrar** a oficina. Ele não substitui os episódios: traz os tempos,
+o que demonstrar e o que deixar para os participantes fazerem, e onde as turmas costumam travar.
+
+## Tempos sugeridos
+
+Os tempos de ensino e de exercícios de cada episódio vêm do próprio material original:
+
+| Episódio | Ensino | Exercícios | Total |
+|---|---|---|---|
+| 1. Ler dados de casos | 20 min | 10 min | 30 min |
+| 2. Limpar dados de casos | 45 min | 15 min | 60 min |
+| 3. Validar dados e marcar casos | 20 min | 10 min | 30 min |
+| 4. Agregar e visualizar | 20 min | 10 min | 30 min |
+| **Total** | | | **2h30** |
+
+Com a preparação de ambiente e as paradas para dúvidas, uma oficina completa costuma ocupar
+**meio período (3h a 4h)**. Se você tiver menos tempo, o recorte mais útil é o episódio 2
+(limpeza) seguido do 4 (incidência e curva epidêmica).
+
+## Pré-requisitos dos participantes
+
+- R intermediário: ler dados, transformar, reorganizar e fazer gráficos.
+- Familiaridade com `{dplyr}`, `{tidyr}` e `{ggplot2}`.
+- Uso do pipe (`%>%` ou `|>`).
+- Conceitos básicos de estatística e de teoria de epidemias — **não** é preciso saber modelagem.
+
+Se a turma não tiver esse repertório, reserve um bloco antes da oficina para revisar
+manipulação de dados com `{dplyr}`, ou indique o material introdutório de R do
+[*The Epidemiologist R Handbook*](https://www.epirhandbook.com/) e os
+[tutoriais da Applied Epi](https://appliedepi.org/resources/tutorials.html).
+
+## Antes da oficina: checklist de preparação
+
+1. **Mande a página de [Setup](../setup.qmd) com antecedência** e peça que todos instalem R,
+   as ferramentas de compilação e os pacotes **em casa**. A instalação dos pacotes do Epiverse
+   compila código-fonte e pode levar bastante tempo; fazer isso na sala consome a oficina inteira.
+2. **Confirme que os pacotes carregam** na máquina de cada participante:
+   `library(readepi)`, `library(cleanepi)`, `library(linelist)`, `library(simulist)`,
+   `library(incidence2)`.
+3. **Baixe os dados com antecedência.** Todos os arquivos usados no curso estão na pasta
+   [`data/`](../data/) deste site. Se a rede da sala for ruim, distribua os arquivos em pendrive
+   e peça que cada participante crie uma pasta `data/` dentro do projeto do R.
+4. **Tenha um plano B para as partes que dependem de internet**: a leitura de dados por API
+   (DHIS2 e SORMAS) e a conexão com bancos de dados usam servidores de demonstração. Se a rede
+   falhar, faça a demonstração você mesmo na projeção e siga para a leitura de arquivos locais.
+5. **Projetor**: os blocos de código ficam pequenos em telas grandes. Aumente o zoom do editor
+   e do console antes de começar.
+6. **Combine a pasta de trabalho.** O curso usa projetos do R e caminhos relativos com o pacote
+   `{here}`. Peça que todos criem a mesma estrutura de projeto, com a pasta `data/` na raiz.
+
+## Como conduzir cada episódio
+
+### 1. Ler dados de casos
+
+O que demonstrar na projeção: a criação do projeto do R, a leitura de um CSV com `{rio}` e o
+motivo de usar `{here}` em vez de caminhos absolutos.
+
+O que deixar para os participantes fazerem: importar os arquivos `ebola_cases_2.csv` e
+`Marburg.zip` e abrir o objeto resultante. Os desafios sobre formatos alternativos (Excel, SPSS)
+funcionam bem em duplas.
+
+Ponto de atenção: as seções de banco de dados e de APIs de sistemas de informação (`{readepi}`)
+são as mais lentas e as mais dependentes de rede. Não deixe que elas consumam o tempo do
+episódio — o essencial aqui é a leitura de arquivos e o entendimento de que os dados podem vir
+de várias fontes.
+
+### 2. Limpar dados de casos
+
+É o episódio mais longo e o mais rico. A sequência é: diagnosticar os problemas, padronizar
+nomes de colunas, remover irregularidades, tratar valores ausentes, converter datas.
+
+O que demonstrar: a inspeção inicial dos dados brutos e o uso de `cleanepi::clean_data()` com
+várias operações de uma vez.
+
+O que deixar para os participantes fazerem: os desafios de padronização de nomes de colunas e
+o de remoção de linhas e colunas irregulares. Peça que comparem as dimensões do objeto antes e
+depois — o material tem uma checagem para isso.
+
+### 3. Validar dados e marcar casos
+
+O foco é converter o data frame em um `linelist`, marcar as colunas por papel (identificador,
+data de início, desfecho) e validar com dicionário de dados.
+
+O que demonstrar: o cenário de "mudança inesperada" no meio do surto e como a validação do
+`{linelist}` avisa sobre isso.
+
+O que deixar para os participantes fazerem: criar o linelist, marcar as colunas e testar o que
+acontece quando uma coluna perde a marcação.
+
+### 4. Agregar e visualizar
+
+Aqui o linelist deixa de ser uma tabela de casos e vira incidência ao longo do tempo — a curva
+epidêmica.
+
+O que demonstrar: `incidence2::incidence()` por sexo e por semana, e uma curva epidêmica com
+`{ggplot2}`.
+
+O que deixar para os participantes fazerem: os desafios de agregação em intervalos de duas
+semanas e a interpretação dos tipos de curva (fonte pontual, fonte propagada).
+
+Ponto de atenção: a discussão sobre **atraso de notificação** (censura à direita) é o gancho
+para o próximo curso da trilha (análise em tempo real e nowcasting). Vale deixar alguns minutos
+para essa conversa.
+
+## Onde as turmas costumam travar
+
+- **Caminhos de arquivo.** Erro clássico: rodar o código sem estar dentro do projeto do R, ou
+  com os dados em uma pasta diferente de `data/`. Resolva mostrando `here::here("data")` na
+  projeção e conferindo o diretório de trabalho com `getwd()`.
+- **Datas.** Os dados brutos têm datas em mais de um formato na mesma coluna. O material trata
+  disso no episódio 2; antecipe que é normal e que a padronização é justamente parte do trabalho.
+- **Pacotes que não carregam.** Quase sempre é instalação incompleta (compilação que falhou em
+  casa). Tenha um participante de referência com o ambiente pronto, ou uma máquina sua pronta
+  para emprestar.
+- **Colunas com nomes diferentes do esperado.** Se os participantes usarem dados próprios, o
+  nome das colunas muda e o código precisa ser ajustado. Isso é esperado: aproveite para discutir
+  dicionário de dados.
+
+## Adaptando para os seus dados
+
+O curso inteiro é construído sobre dados de exemplo de surtos (ebola, Marburg e dados simulados).
+A forma de trazer a realidade local para a oficina é trocar os arquivos da pasta `data/` pelos
+seus — mantendo as mesmas colunas usadas no material (`id`, `date_onset`, `date_outcome`, `sex`,
+`age`, `outcome`) — e conduzir os mesmos passos de limpeza e validação.
+
+Antes de usar uma base real, verifique a política de uso dos dados no seu serviço e trabalhe,
+sempre que possível, com uma **base anonimizada**: remova nomes, documentos e qualquer campo que
+identifique a pessoa. Dados de saúde são dados pessoais sensíveis e o compartilhamento em sala
+de aula precisa seguir a LGPD e as regras da sua instituição.

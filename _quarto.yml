@@ -1,0 +1,58 @@
+project:
+  type: book
+  output-dir: _site
+  resources:
+    - data
+
+book:
+  title: "Análise de dados de surto com R"
+  subtitle: "Ler, limpar, validar e visualizar dados de casos (linelist)"
+  author: |
+    Adaptação para o português: Marcos V. M. de Lima<br>
+    Material original: Epiverse-TRACE (CC-BY 4.0)
+  date: "2026-09-20"
+  chapters:
+    - index.qmd
+    - setup.qmd
+    - episodios/01-ler-dados.qmd
+    - episodios/02-limpar-dados.qmd
+    - episodios/03-validar-dados.qmd
+    - episodios/04-agregar-visualizar.qmd
+  appendices:
+    - glossario.qmd
+    - instrutor.qmd
+    - licenca.qmd
+  repo-url: https://github.com/MVMLima/tutorials-early-pt
+  repo-actions: [edit, issue]
+  search: true
+  sharing: [twitter, linkedin]
+  page-footer:
+    left: "Baseado em Epiverse-TRACE *Tutorials Early* (CC-BY 4.0)"
+    right: "Adaptação PT-BR: Marcos V. M. de Lima"
+  sidebar:
+    style: docked
+    search: true
+  favicon: img/pkgs-hexlogos.png
+
+format:
+  html:
+    lang: pt-BR
+    theme: [cosmo, styles.css]
+    toc: true
+    toc-depth: 3
+    toc-title: "Nesta página"
+    number-sections: false
+    code-copy: true
+    code-overflow: wrap
+    code-summary: "Código"
+    code-line-numbers: false
+    fig-cap-location: bottom
+    tbl-cap-location: top
+    link-external-newwindow: true
+    highlight-style: github
+
+execute:
+  freeze: auto
+  warning: true
+
+editor: positron

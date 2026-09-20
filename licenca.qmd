@@ -1,0 +1,45 @@
+# Licença e créditos
+
+## Material original
+
+Este curso é uma **adaptação** do tutorial:
+
+> Degoot A, Valle-Campos A, Mané K, Gruson H, Funk S, Eggo R, Kucharski A, Bah B (2026).
+> *Epiverse-TRACE Tutorials Early: Read and clean case data, and make linelist for outbreak
+> analytics with R.* DOI: [10.5281/zenodo.21512018](https://doi.org/10.5281/zenodo.21512018).
+> <https://epiverse-trace.github.io/tutorials-early/>
+
+O material original é desenvolvido pela iniciativa [Epiverse-TRACE](https://epiverse-trace.github.io/)
+e foi construído sobre o modelo de lição do [The Carpentries Workbench](https://carpentries.github.io/workbench/)
+(modelo publicado sob licença CC BY).
+
+## Licença
+
+O conteúdo instrucional original é publicado sob a licença
+[Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+Esta adaptação é publicada sob **a mesma licença CC BY 4.0**, que permite copiar, redistribuir,
+adaptar e usar o material para qualquer finalidade, inclusive comercial, desde que o crédito
+seja dado ao material original, seja indicado o link da licença e seja informado se houve
+alterações.
+
+**Como citar esta adaptação:**
+
+> Lima MVM (2026). *Análise de dados de surto com R: ler, limpar, validar e visualizar dados de
+> casos.* Adaptação em português brasileiro de Epiverse-TRACE Tutorials Early.
+> <https://github.com/MVMLima/tutorials-early-pt>
+
+## O que foi alterado nesta adaptação
+
+- Tradução integral para o português brasileiro.
+- Reorganização do formato de lição (Carpentries Workbench) para livro digital em
+  [Quarto](https://quarto.org/).
+- Os pacotes de software, as funções, os nomes de colunas e os dados de exemplo permaneceram
+  **exatamente** como no original, para que o código continue funcionando sem alterações.
+- Inclusão de caixas de contexto brasileiro (ligações com SINAN, DATASUS e a rotina de vigilância),
+  escritas para esta adaptação.
+- Inclusão de um guia para quem conduz a oficina e do glossário traduzido.
+
+## Avaliação, conserto e sugestões
+
+Se você encontrar erro de tradução, link quebrado ou explicação confusa, abra uma *issue* no
+repositório: <https://github.com/MVMLima/tutorials-early-pt/issues>

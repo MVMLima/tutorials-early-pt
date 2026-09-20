@@ -1,0 +1,79 @@
+---
+title: 'Glossário de termos'
+---
+
+## A
+
+[Análise de surtos (*outbreak analytics*)]{#outbreakanalytics}
+: Conjunto de tarefas de análise de dados de um surto que respondem às perguntas de saúde pública
+típicas de uma epidemia — padrões de transmissão, gravidade e efeito das medidas de controle —
+organizadas em etapas: ler e limpar os dados de casos, validar e marcar as colunas, descrever os
+casos e, adiante na trilha, fazer análise em tempo real, previsão e modelagem de cenários
+([Cori et al. 2017](https://royalsocietypublishing.org/doi/10.1098/rstb.2016.0371)).
+
+[Atraso de notificação (*reporting delay*)]{#reportingdelay}
+: Atraso ou defasagem entre o momento em que um evento ocorre (por exemplo, o início dos sintomas)
+e o momento em que ele é notificado ([Lawless, 1994](https://www.jstor.org/stable/3315820)).
+Podemos quantificá-lo comparando a [linelist](#linelist) com versões sucessivas dela mesma ou com
+contagens agregadas de casos notificados atualizadas ([Cori et al. 2017](https://royalsocietypublishing.org/doi/10.1098/rstb.2016.0371)).
+
+## C
+
+[Censura à direita (*right-censoring*)]{#rightcensoring}
+: Ocorre quando o valor verdadeiro ou o evento de algumas observações ainda não é conhecido no
+momento da análise, porque o período de observação terminou antes que pudesse ser totalmente
+registrado; nesse caso, esses pontos de dados são apenas parcialmente observados, e não
+totalmente ausentes. Você pode ler mais sobre *censura* e *truncamento* nesta introdução a
+[Vieses em distribuições de atraso](https://nfidd.github.io/nfidd/sessions/biases-in-delay-distributions.html)
+e sobre as implicações para *nowcasting* (previsão imediata) em
+[Johnson et al. 2026](https://wellcomeopenresearch.org/articles/10-614/v2).
+
+## I
+
+[Intervalo serial (*serial interval*)]{#serialinterval}
+: O atraso temporal entre o início dos sintomas de um caso primário e o de um caso secundário.
+Esse valor pode ser negativo quando ocorre transmissão pré-sintomática.
+Mais frequentemente, a distribuição do intervalo serial de uma infecção é usada para estimar a
+distribuição do [tempo de geração](#generationtime)
+([(Cori et al., 2017)](https://royalsocietypublishing.org/doi/10.1098/rstb.2016.0371)).
+A relação entre o intervalo serial e o [período de incubação](#incubation) ajuda a definir o tipo
+de transmissão da infecção (sintomática ou pré-sintomática)
+([Nishiura et al. (2020)](https://www.ijidonline.com/article/S1201-9712(20)30119-3/fulltext#gr2)).
+
+## L
+
+[Linelist (lista de casos)]{#linelist}
+: Uma linelist é um conjunto de dados estruturado no qual cada linha representa um caso individual
+ou observação e cada coluna representa uma variável específica que descreve esse caso, como
+informações demográficas, datas de início dos sintomas, exposição ou desfechos.
+[Linelists são um formato fundamental de dados em epidemiologia](https://outbreaktools.ca/background/line-lists/).
+
+## P
+
+[Período de incubação (*incubation period*)]{#incubation}
+: O tempo entre a infecção e o início dos sintomas.
+[Mais informações sobre o período de incubação](https://en.wikipedia.org/wiki/Latent_period_(epidemiology)#Incubation_period).
+Ele pode ser diferente do [período de latência](#latent), como mostrado na Figura 4 de
+([Xiang et al. (2021)](https://www.sciencedirect.com/science/article/pii/S2468042721000038#fig4)).
+A relação entre o período de incubação e o [intervalo serial](#serialinterval) ajuda a definir o
+tipo de transmissão da infecção (sintomática ou pré-sintomática)
+([Nishiura et al. (2020)](https://www.ijidonline.com/article/S1201-9712(20)30119-3/fulltext#gr2)).
+
+[Período de latência (*latent period*)]{#latent}
+: O tempo entre a infecção e o início da transmissibilidade.
+Ele pode ser diferente do [período de incubação](#incubation), como mostrado na Figura 4 de
+([Xiang et al, 2021](https://www.sciencedirect.com/science/article/pii/S2468042721000038#fig4)).
+
+## R
+
+[RDBMS]{#RDBMS}
+: *Relational Database Management System* (Sistema de Gerenciamento de Banco de Dados Relacional).
+
+## T
+
+[Tempo de geração (*generation time*)]{#generationtime}
+: Tempo entre o início da transmissibilidade de um caso primário e o de seu caso secundário. Esse
+valor precisa ser sempre positivo.
+A distribuição do tempo de geração é comumente estimada a partir de dados da distribuição do
+[intervalo serial](#serialinterval) de uma infecção
+([Cori et al. 2017](https://royalsocietypublishing.org/doi/10.1098/rstb.2016.0371)).
