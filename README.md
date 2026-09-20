@@ -46,6 +46,12 @@ guardados em `_freeze/` e o build no GitHub Actions **não precisa do R nem dos 
 você alterar o **código** de um `.qmd`, renderize localmente de novo e commite o `_freeze/`
 atualizado junto com o arquivo.
 
+> **Efeito colateral esperado:** ao renderizar, o episódio 2 grava o arquivo
+> `data/cleaned_data.csv` (é o próprio exercício da lição que faz isso). Se você rodar o render
+> e não quiser essa alteração no `git status`, restaure o arquivo com
+> `git checkout -- data/cleaned_data.csv`. O arquivo publicado no site é o que estiver no
+> repositório no momento do build.
+
 ## Publicação
 
 O workflow `.github/workflows/publish.yml` renderiza o site e publica na branch `gh-pages` a
