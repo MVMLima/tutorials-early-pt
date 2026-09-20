@@ -22,12 +22,12 @@ jobs:
 
       # O site é renderizado a partir do cache em `_freeze/` (commitado no repositório),
       # por isso o build não precisa do R nem dos pacotes do Epiverse no CI.
-      # `-M execute.freeze=true` força o uso do cache mesmo quando um .qmd é editado:
-      # sem isso, editar só o TEXTO de um episódio (direto no GitHub) faria o CI tentar
-      # reexecutar o código R e falhar, porque os pacotes não existem no runner.
+      # O perfil `ci` (_quarto-ci.yml) liga `freeze: true`, que reaproveita os resultados
+      # já calculados mesmo quando um .qmd muda — sem ele, editar só o TEXTO de um episódio
+      # faria o CI tentar executar o R e o runner não tem R instalado.
       # Regra: mudou CÓDIGO R -> rode `quarto render` localmente e commite o _freeze/ junto.
       - name: Renderizar o site
-        run: quarto render -M execute.freeze=true
+        run: quarto render --profile ci
 
       - name: Publicar no GitHub Pages (branch gh-pages)
         uses: peaceiris/actions-gh-pages@v4
